@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -31,9 +31,9 @@ class SearchNode:
 
     def __init__(self, position, parent=None, transition=None, cost=0, heuristic=0):
         """
-        Basic constructor which copies the values. Remember, you can access all the 
-        values of a python object simply by referencing them - there is no need for 
-        a getter method. 
+        Basic constructor which copies the values. Remember, you can access all the
+        values of a python object simply by referencing them - there is no need for
+        a getter method.
         """
         self.position = position
         self.parent = parent
@@ -46,7 +46,7 @@ class SearchNode:
         Check if the node has a parent.
         returns True in case it does, False otherwise
         """
-        return self.parent == None 
+        return self.parent == None
 
     def unpack(self):
         """
@@ -55,24 +55,30 @@ class SearchNode:
         """
         return self.position, self.parent, self.cost, self.heuristic
 
+    def cost(self):
+        return unpack(self)[2]
+
+    def heuristicCost(self):
+        return unpack(self)[2] + unpack(self)[3]
 
     def backtrack(self):
         """
         Reconstruct a path to the initial state from the current node.
-        Bear in mind that usually you will reconstruct the path from the 
+        Bear in mind that usually you will reconstruct the path from the
         final node to the initial.
         """
         moves = []
         # make a deep copy to stop any referencing isues.
         node = copy.deepcopy(self)
 
-        if node.isRootNode(): 
+        if node.isRootNode():
             # The initial state is the final state
-            return moves        
+            return moves
 
         "**YOUR CODE HERE**"
-        util.raiseNotDefined()
+        moves = node.unpack()[1].backtrack() + [node.transition]
 
+        return moves
 
 class SearchProblem:
     """
@@ -142,17 +148,17 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return abstractSearch('DFS', problem)
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return abstractSearch('BFS', problem)
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return abstractSearch('UCS', problem)
 
 def nullHeuristic(state, problem=None):
     """
@@ -164,7 +170,42 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return abstractSearch('A*', problem, heuristic)
+
+def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
+    """Implements all 4 search algorithms above"""
+    if (searchAlgorithm == 'BFS'):
+        struct = util.Queue()
+    elif (searchAlgorithm == 'DFS'):
+        struct = util.Stack()
+    elif (searchAlgorithm == 'UCS'):
+        struct = util.PriorityQueueWithFunction(cost)
+    elif (searchAlgorithm == 'A*'):
+        struct = util.PriorityQueueWithFunction(heuristicCost)
+
+    s0 = problem.getStartState()
+    n = SearchNode(s0, None, None, 0, heuristic(s0))
+    struct.push(n)
+
+    visited = []
+
+    while (True):
+        n = struct.pop()
+
+        s = n.unpack()[0]
+
+        if (problem.isGoalState(s)):
+            return list(reversed(n.backtrack()))
+
+        l = problem.getSuccessors(s)
+        visited.append(s)
+
+        for s2, a, nc in l:
+            if s2 in visited:
+                continue
+
+            n2 = SearchNode(s2, n, a, nc + n.unpack()[2], heuristic(s2))
+            struct.push(n2)
 
 
 # Abbreviations
