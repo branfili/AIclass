@@ -55,12 +55,6 @@ class SearchNode:
         """
         return self.position, self.parent, self.cost, self.heuristic
 
-    def cost(self):
-        return unpack(self)[2]
-
-    def heuristicCost(self):
-        return unpack(self)[2] + unpack(self)[3]
-
     def backtrack(self):
         """
         Reconstruct a path to the initial state from the current node.
@@ -167,10 +161,18 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     return abstractSearch('A*', problem, heuristic)
+
+def cost(node):
+    return node.unpack()[2]
+
+def aStarCost(node):
+    l = node.unpack()
+    return l[2] + l[3]
 
 def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
     """Implements all 4 search algorithms above"""
@@ -181,10 +183,10 @@ def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
     elif (searchAlgorithm == 'UCS'):
         struct = util.PriorityQueueWithFunction(cost)
     elif (searchAlgorithm == 'A*'):
-        struct = util.PriorityQueueWithFunction(heuristicCost)
+        struct = util.PriorityQueueWithFunction(aStarCost)
 
     s0 = problem.getStartState()
-    n = SearchNode(s0, None, None, 0, heuristic(s0))
+    n = SearchNode(s0, None, None, 0, heuristic(s0, problem))
     struct.push(n)
 
     visited = []
@@ -194,17 +196,20 @@ def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
 
         s = n.unpack()[0]
 
-        if (problem.isGoalState(s)):
-            return list(reversed(n.backtrack()))
+        if (s in visited):
+            continue
 
-        l = problem.getSuccessors(s)
         visited.append(s)
 
-        for s2, a, nc in l:
-            if s2 in visited:
-                continue
+        if (problem.isGoalState(s)):
+            return n.backtrack()
 
-            n2 = SearchNode(s2, n, a, nc + n.unpack()[2], heuristic(s2))
+        l = problem.getSuccessors(s)
+
+        from pacman import PacmanRules
+
+        for s2, a, nc in l:
+            n2 = SearchNode(s2, n, a, cost(n) + nc, heuristic(s2, problem))
             struct.push(n2)
 
 
