@@ -61,18 +61,15 @@ class SearchNode:
         Bear in mind that usually you will reconstruct the path from the
         final node to the initial.
         """
-        moves = []
         # make a deep copy to stop any referencing isues.
         node = copy.deepcopy(self)
 
         if node.isRootNode():
             # The initial state is the final state
-            return moves
+            return []
 
         "**YOUR CODE HERE**"
-        moves = node.unpack()[1].backtrack() + [node.transition]
-
-        return moves
+        return [node.transition] + node.unpack()[1].backtrack()
 
 class SearchProblem:
     """
@@ -202,7 +199,7 @@ def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
         visited.append(s)
 
         if (problem.isGoalState(s)):
-            return n.backtrack()
+            return list(reversed(n.backtrack()))
 
         l = problem.getSuccessors(s)
 
