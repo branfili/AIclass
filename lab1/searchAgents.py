@@ -369,22 +369,14 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    pos, bitMask = state
+    position, bitMask = state
 
     corners2 = []
     for i in range(4):
         if ((bitMask & (2 ** i)) == 0):
             corners2.append(corners[i])
 
-    h = 0
-    for i in range(len(corners2)):
-        if (i == 0):
-            h += abs(corners2[i][0] - pos[0]) + abs(corners2[i][1] - pos[1])
-        else:
-            h += abs(corners2[i][0] - corners2[i - 1][0]) + abs(corners2[i][1] - corners2[i - 1][1])
-
-    return h
-
+    return listHeuristic(position, corners2)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -478,14 +470,35 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    foodCoords = foodGrid.asList()
+    return listHeuristic(position, foodGrid.asList())
+
+def listHeuristic(position, searchList):
+    searchList = [position] + searchList
+
+    cur = 0
+    visited = [0] * len(searchList)
 
     h = 0
-    for i in range(len(foodCoords)):
-        if (i == 0):
-            h += abs(position[0] - foodCoords[i][0]) + abs(position[1] - foodCoords[i][1])
-        else:
-            h += abs(foodCoords[i][0] - foodCoords[i - 1][0]) + abs(foodCoords[i][1] - foodCoords[i - 1][1])
+    while True:
+        visited[cur] = 1
+
+        mini = 10 ** 10
+        minCoord = cur
+        for i in range(len(searchList)):
+            if (visited[i]):
+                continue
+
+            z = abs(searchList[cur][0] - searchList[i][0]) + abs(searchList[cur][1] - searchList[i][1])
+
+            if (z < mini):
+                mini = z
+                minCoord = i
+
+        if (mini == 10 ** 10):
+            break
+
+        h += mini
+        cur = minCoord
 
     return h
 
