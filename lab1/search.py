@@ -188,7 +188,7 @@ def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
 
     visited = []
 
-    while (True):
+    while not struct.isEmpty():
         n = struct.pop()
 
         s = n.unpack()[0]
@@ -203,11 +203,11 @@ def abstractSearch(searchAlgorithm, problem, heuristic=nullHeuristic):
 
         l = problem.getSuccessors(s)
 
-        from pacman import PacmanRules
-
         for s2, a, nc in l:
             n2 = SearchNode(s2, n, a, cost(n) + nc, heuristic(s2, problem))
             struct.push(n2)
+
+    return []
 
 
 # Abbreviations

@@ -376,7 +376,7 @@ def cornersHeuristic(state, problem):
         if ((bitMask & (2 ** i)) == 0):
             corners2.append(corners[i])
 
-    return listHeuristic(position, corners2)
+    return listHeuristic(position, corners2, walls)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -470,37 +470,41 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return listHeuristic(position, foodGrid.asList())
+    return listHeuristic(position, foodGrid.asList(), problem.walls)
 
-def listHeuristic(position, searchList):
-    searchList = [position] + searchList
+def listHeuristic(position, searchList, walls):
+    if not searchList:
+        return 0
 
-    cur = 0
-    visited = [0] * len(searchList)
+    listProblem = ListHeuristicSearchProblem(position, searchList, walls)
 
-    h = 0
-    while True:
-        visited[cur] = 1
+    return len(search.bfs(listProblem))
 
-        mini = 10 ** 10
-        minCoord = cur
-        for i in range(len(searchList)):
-            if (visited[i]):
-                continue
+class ListHeuristicSearchProblem(search.SearchProblem):
+    def __init__(self, startingPosition, goalList, walls):
+        self.startState = startingPosition
+        self.goals = goalList
+        self.walls = walls
 
-            z = abs(searchList[cur][0] - searchList[i][0]) + abs(searchList[cur][1] - searchList[i][1])
+    def getStartState(self):
+        return self.startState
 
-            if (z < mini):
-                mini = z
-                minCoord = i
+    def isGoalState(self, state):
+        return state in self.goals
 
-        if (mini == 10 ** 10):
-            break
+    def getSuccessors(self, state):
+        successors = []
 
-        h += mini
-        cur = minCoord
+        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            x, y = state
 
-    return h
+            dx, dy = Actions.directionToVector(action)
+            nextX, nextY = int(x + dx), int(y + dy)
+
+            if not self.walls[nextX][nextY]:
+                successors.append(((nextX, nextY), action, 1))
+
+        return successors
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
