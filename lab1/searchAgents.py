@@ -376,7 +376,7 @@ def cornersHeuristic(state, problem):
         if ((bitMask & (2 ** i)) == 0):
             corners2.append(corners[i])
 
-    return listHeuristic(position, corners2, walls)
+    return listHeuristic(position, corners2)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -470,41 +470,39 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return listHeuristic(position, foodGrid.asList(), problem.walls)
+    return listHeuristic(position, foodGrid.asList())
 
-def listHeuristic(position, searchList, walls):
+def listHeuristic(position, searchList):
     if not searchList:
         return 0
 
-    listProblem = ListHeuristicSearchProblem(position, searchList, walls)
+    l = [position] + searchList
+    visited = []
+    cur = 0
 
-    return len(search.bfs(listProblem))
+    h = 0
+    while True:
+        mini = 10 ** 10
+        minx = -1
 
-class ListHeuristicSearchProblem(search.SearchProblem):
-    def __init__(self, startingPosition, goalList, walls):
-        self.startState = startingPosition
-        self.goals = goalList
-        self.walls = walls
+        for i in range(len(l)):
+            if i in visited:
+                continue
 
-    def getStartState(self):
-        return self.startState
+            z = abs(l[cur][0] - l[i][0]) + abs(l[cur][1] -l[i][1])
 
-    def isGoalState(self, state):
-        return state in self.goals
+            if z < mini:
+                mini = z
+                minx = i
 
-    def getSuccessors(self, state):
-        successors = []
+        if (mini == 10**10):
+            break
 
-        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x, y = state
+        h += mini
+        visited.append(cur)
+        cur = minx
 
-            dx, dy = Actions.directionToVector(action)
-            nextX, nextY = int(x + dx), int(y + dy)
-
-            if not self.walls[nextX][nextY]:
-                successors.append(((nextX, nextY), action, 1))
-
-        return successors
+    return h
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
