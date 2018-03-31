@@ -371,12 +371,40 @@ def cornersHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     position, bitMask = state
 
-    corners2 = []
+    l = [position]
     for i in range(4):
         if ((bitMask & (2 ** i)) == 0):
-            corners2.append(corners[i])
+            l.append(corners[i])
 
-    return listHeuristic(position, corners2)
+    if (len(l) == 1):
+        return 0
+
+    cur = 0
+    visited = [cur]
+    h = 0
+
+    while True:
+        mini = 10 ** 10
+        minx = -1
+
+        for i in range(len(l)):
+            if i in visited:
+                continue
+
+            z = abs(l[cur][0] - l[i][0]) + abs(l[cur][1] - l[i][1])
+
+            if z < mini:
+                mini = z
+                minx = i
+
+        if (mini == 10**10):
+            break
+
+        h += mini
+        cur = minx
+        visited.append(cur)
+
+    return h
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -470,37 +498,15 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return listHeuristic(position, foodGrid.asList())
+    searchList = foodGrid.asList()
 
-def listHeuristic(position, searchList):
     if not searchList:
         return 0
 
-    l = [position] + searchList
-    visited = []
-    cur = 0
+    h = 10 ** 10
 
-    h = 0
-    while True:
-        mini = 10 ** 10
-        minx = -1
-
-        for i in range(len(l)):
-            if i in visited:
-                continue
-
-            z = abs(l[cur][0] - l[i][0]) + abs(l[cur][1] -l[i][1])
-
-            if z < mini:
-                mini = z
-                minx = i
-
-        if (mini == 10**10):
-            break
-
-        h += mini
-        visited.append(cur)
-        cur = minx
+    for pos in searchList:
+        h = min(h, abs(pos[0] - position[0]) + abs(pos[1] - position[1]))
 
     return h
 
