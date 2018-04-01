@@ -498,8 +498,9 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    searchList = foodGrid.asList()
+    return listHeuristic(position, foodGrid.asList())
 
+def listHeuristic(position, searchList):
     if not searchList:
         return 0
 
@@ -508,7 +509,7 @@ def foodHeuristic(state, problem):
     for pos in searchList:
         h = min(h, abs(pos[0] - position[0]) + abs(pos[1] - position[1]))
 
-    return h
+    return h + len(searchList) - 1
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
