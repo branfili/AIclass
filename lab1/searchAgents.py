@@ -391,7 +391,7 @@ def cornersHeuristic(state, problem):
             if i in visited:
                 continue
 
-            z = abs(l[cur][0] - l[i][0]) + abs(l[cur][1] - l[i][1])
+            z = util.manhattanDistance(l[cur], l[i])
 
             if z < mini:
                 mini = z
@@ -506,7 +506,7 @@ def foodHeuristic(state, problem):
     h = 10 ** 10
 
     for pos in foodList:
-        h = min(h, abs(pos[0] - position[0]) + abs(pos[1] - position[1]))
+        h = min(h, util.manhattanDistance(pos, position))
 
     return h + len(foodList) - 1
 
