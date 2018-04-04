@@ -95,31 +95,56 @@ def logicBasedSearch(problem):
         tranisitions - simply pass the visited states to the 'reconstructPath' method
         in the search problem. Check logicAgents.py and search.py for implementation.
     """
+    allStates = set()
+    for x in range(20):
+        for y in range(20):
+            allStates |= set([(x, y)])
+
+    baseKnowledge = set()
+
+    for cur in allStates:
+        cur = (x, y)
+        succ = problem.getSuccessors(cur)
+        ns = set()
+
+        ns |= set([Clause(set([Literal('S', cur, True)] + [Literal('W', sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal('S', cur, False), Literal('W', sc, True)])) for sc in succ])
+
+        ns |= set([Clause(set([Literal('C', cur, True)] + [Literal('P', sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal('C', cur, False), Literal('P', sc, True)])) for sc in succ])
+
+        ns |= set([Clause(set([Literal('G', cur, True)] + [Literal('T', sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal('G', cur, False), Literal('T', sc, True)])) for sc in succ])
+
+        ns |= set([Clause(set([Literal('W', cur, True), Literal('W', st, True)])) for st in diff(allStates, set([cur]))])
+        ns |= set([Clause(set([Literal('C', cur, False), Literal('S', cur, False), Literal('O', sc, False)])) for sc in succ])
+
+        ns |= set([Clause(set([Literal('W', cur, False), Literal('P', cur, False), Literal('O', cur, False)]))])
+
+        baseKnowledge |= ns
+
     # array in order to keep the ordering
     visitedStates = []
     startState = problem.getStartState()
     visitedStates.append(startState)
-    """
-    ####################################
-    ###                              ###
-    ###        YOUR CODE HERE        ###
-    ###                              ###
-    ####################################
-    """
 
-####################################
-###                              ###
-###        YOUR CODE THERE       ###
-###                              ###
-####################################
+    q = Queue()
+    q.push(startState)
 
-"""
-        ####################################
-        ###                              ###
-        ###      YOUR CODE EVERYWHERE    ###
-        ###                              ###
-        ####################################
-"""
+    memory = {}
+    memory[s] = ""
+
+
+    while not q.isEmpty():
+        s = q.pop()
+
+        if (s in visitedStates):
+            continue
+
+        visitedStates.append(s)
+
+        if 'T' in memory[s]:
+            return problem.reconstructPath(visitedStates)
 
 # Abbreviations
 lbs = logicBasedSearch
