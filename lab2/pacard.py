@@ -1,4 +1,4 @@
-
+﻿
 """
 In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
@@ -60,6 +60,21 @@ def miniWumpusSearch(problem):
     n = Directions.NORTH
     return  [e, n, n]
 
+def chooseNextState(nextStates, memory):
+    st = filter(lambda s: Labels.TELEPORTER in memory[s], nextStates)
+    if (len(st) != 0):
+        return st[0]
+
+    st = filter(lambda s: Labels.SAFE in memory[s], nextStates)
+    st.sort(stateWeight)
+    if (len(st) != 0):
+        return st[0]
+
+    st = filter(lambda s: memory[s] == "", nextStates)
+    st.sort(StateWeight)
+    if (len(st) != 0):
+        return st[0]
+
 def logicBasedSearch(problem):
     """
 
@@ -95,56 +110,121 @@ def logicBasedSearch(problem):
         tranisitions - simply pass the visited states to the 'reconstructPath' method
         in the search problem. Check logicAgents.py and search.py for implementation.
     """
-    allStates = set()
-    for x in range(20):
-        for y in range(20):
-            allStates |= set([(x, y)])
+    width = max(map(lambda (x, y): x, problem.walls.asList()))
+    height = max(map(lambda (x, y): y, problem.walls.asList()))
+
+    kl = []
+    for x in range(width):
+        for y in range(height):
+            kl += [(x, y)]
+
+    allStates = set(kl)
 
     baseKnowledge = set()
-
     for cur in allStates:
-        cur = (x, y)
-        succ = problem.getSuccessors(cur)
-        ns = set()
+        succ = map(lambda (s, a, c): s, problem.getSuccessors(cur))
 
-        ns |= set([Clause(set([Literal('S', cur, True)] + [Literal('W', sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal('S', cur, False), Literal('W', sc, True)])) for sc in succ])
+        succ2 = []
+        for st1 in succ:
+            for st2 in succ:
+                if (st1 != st2):
+                    succ2 += [(st1, st2)]
 
-        ns |= set([Clause(set([Literal('C', cur, True)] + [Literal('P', sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal('C', cur, False), Literal('P', sc, True)])) for sc in succ])
+        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] + [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
+        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.WUMPUS, sc, True)])) for sc in succ])
 
-        ns |= set([Clause(set([Literal('G', cur, True)] + [Literal('T', sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal('G', cur, False), Literal('T', sc, True)])) for sc in succ])
+        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] + [Literal(Labels.POISON, sc, False) for sc in succ]))])
+        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.POISON, sc, True)])) for sc in succ])
 
-        ns |= set([Clause(set([Literal('W', cur, True), Literal('W', st, True)])) for st in diff(allStates, set([cur]))])
-        ns |= set([Clause(set([Literal('C', cur, False), Literal('S', cur, False), Literal('O', sc, False)])) for sc in succ])
+        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] + [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
+        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False), Literal(Labels.TELEPORTER, sc, True)])) for sc in succ])
 
-        ns |= set([Clause(set([Literal('W', cur, False), Literal('P', cur, False), Literal('O', cur, False)]))])
+        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS, cur, True), Literal(Labels.WUMPUS, st, True)])) for st in allStates - set([cur])])
+        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.SAFE, sc, False)])) for sc in succ])
 
-        baseKnowledge |= ns
+        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS, cur, False), Literal(Labels.POISON, cur, False), Literal(Labels.SAFE, cur, False)]))])
+
+        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True), Literal(Labels.WUMPUS_STENCH, st2, True), Literal(Labels.WUMPUS, cur, False)])) for (st1, st2) in succ2])
+
+        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True), Literal(Labels.TELEPORTER_GLOW, st2, True), Literal(Labels.TELEPORTER, cur, False)])) for (st1, st2) in succ2])
 
     # array in order to keep the ordering
     visitedStates = []
     startState = problem.getStartState()
-    visitedStates.append(startState)
+    visitedStates += [startState]
 
-    q = Queue()
-    q.push(startState)
+    nextStates = [startState]
+    memory = {s: "" for s in allStates}
+    explored = set()
 
-    memory = {}
-    memory[s] = ""
+    while len(nextStates) != 0:
+        s = chooseNextState(nextStates, memory)
+        if (s is None):
+            break
 
+        nextStates.remove(s)
 
-    while not q.isEmpty():
-        s = q.pop()
+        if Labels.TELEPORTER in memory[s]:
+            if (s in visitedStates):
+                visitedStates += [s]
+            break
 
         if (s in visitedStates):
             continue
 
-        visitedStates.append(s)
+        visitedStates += [s]
 
-        if 'T' in memory[s]:
-            return problem.reconstructPath(visitedStates)
+        if (problem.isWumpusClose(s)):
+            memory[s] += Labels.WUMPUS_STENCH
+            explored |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, s, False)]))])
+
+        if (problem.isPoisonCapsuleClose(s)):
+            memory[s] += Labels.POISON_FUMES
+            explored |= set([Clause(set([Literal(Labels.POISON_FUMES, s, False)]))])
+
+        if (problem.isTeleporterClose(s)):
+            memory[s] += Labels.TELEPORTER_GLOW
+            explored |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, s, False)]))])
+
+        succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
+        for sc in succ:
+            wumpusClause = Clause(set([Literal(Labels.WUMPUS, sc, False)]))
+            capsuleClause = Clause(set([Literal(Labels.POISON, sc, False)]))
+            teleporterClause = Clause(set([Literal(Labels.TELEPORTER, sc, False)]))
+            safeClause = Clause(set([Literal(Labels.SAFE, sc, False)]))
+
+            if (resolution(baseKnowledge | explored, set([teleporterClause]))):
+                memory[sc] += Labels.TELEPORTER
+                explored |= set([teleporterClause])
+                nextStates += [sc]
+                continue
+
+            if (resolution(baseKnowledge | explored, set([teleporterClause.negateAll()]))):
+                explored |= set([teleporterClause.negateAll()])
+
+            if (resolution(baseKnowledge | explored, set([wumpusClause]))):
+                memory[sc] += Labels.WUMPUS
+                explored |= set([wumpusClause])
+                continue
+
+            if (resolution(baseKnowledge | explored, set([wumpusClause.negateAll()]))):
+                explored |= set([wumpusClause.negateAll()])
+
+            if (resolution(baseKnowledge | explored, set([capsuleClause]))):
+                memory[sc] += Labels.POISON
+                explored |= set([capsuleClause])
+                continue
+
+            if (resolution(baseKnowledge | explored, set([capsuleClause.negateAll()]))):
+                explored |= set([capsuleClause.negateAll()])
+
+            if (resolution(baseKnowledge | explored, set([safeClause]))):
+                memory[sc] += Labels.SAFE
+                explored |= set([safeClause])
+
+            nextStates += [sc]
+
+    return problem.reconstructPath(visitedStates)
 
 # Abbreviations
 lbs = logicBasedSearch

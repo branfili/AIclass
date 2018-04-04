@@ -287,7 +287,7 @@ def removeRedundant(clauses, setOfSupport):
                 clause.isRedundant(allClauses):
             continue
 
-        newClauses.append(clause)
+        newClauses += [clause]
 
     newSOS = []
 
@@ -296,7 +296,7 @@ def removeRedundant(clauses, setOfSupport):
                 clause.isRedundant(allClauses):
             continue
 
-        newSOS.append(clause)
+        newSOS += [clause]
 
     return (set(newClauses), set(newSOS))
 
@@ -314,7 +314,7 @@ def resolvePair(firstClause, secondClause):
                 if (lit == A or lit == negA):
                     continue
 
-                newClauses.append(lit)
+                newClauses += [lit]
 
             return Clause(newClauses)
 
