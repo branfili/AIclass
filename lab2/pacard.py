@@ -66,12 +66,12 @@ def chooseNextState(nextStates, memory):
         return st[0]
 
     st = filter(lambda s: Labels.SAFE in memory[s], nextStates)
-    st.sort(stateWeight)
+    st.sort(lambda x, y: stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
 
     st = filter(lambda s: memory[s] == "", nextStates)
-    st.sort(stateWeight)
+    st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
 
@@ -170,7 +170,6 @@ def logicBasedSearch(problem):
 
         if (s in visitedStates):
             continue
-        print(s)
 
         visitedStates += [s]
 
