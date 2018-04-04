@@ -252,11 +252,14 @@ def resolution(clauses, goal):
 
     clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
-    if (len(clauses) == 0 or len(setOfSupport) == 0):
-        return False
+    if (len(clauses) + len(setOfSupport) == 0):
+        return True
+
+    newResolvents = set()
 
     while True:
         newClausePairs = selectClauses(clauses, setOfSupport, resolvedPairs)
+        newResolvents = set()
 
         if (len(newClausePairs) == 0):
             return False
@@ -269,12 +272,17 @@ def resolution(clauses, goal):
             if resolvent.isNIL():
                 return True
 
-            setOfSupport |= set([resolvent])
+            newResolvents |= set([resolvent])
+
+        if (newResolvents <= clauses):
+            return False
+
+        setOfSupport |= newResolvents
 
         clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
-        if (len(clauses) == 0 or len(setOfSupport) == 0):
-            return False
+        if (len(clauses) + len(setOfSupport) == 0):
+            return True
 
 
 def removeRedundant(clauses, setOfSupport):

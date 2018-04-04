@@ -71,7 +71,7 @@ def chooseNextState(nextStates, memory):
         return st[0]
 
     st = filter(lambda s: memory[s] == "", nextStates)
-    st.sort(StateWeight)
+    st.sort(stateWeight)
     if (len(st) != 0):
         return st[0]
 
@@ -151,7 +151,6 @@ def logicBasedSearch(problem):
     # array in order to keep the ordering
     visitedStates = []
     startState = problem.getStartState()
-    visitedStates += [startState]
 
     nextStates = [startState]
     memory = {s: "" for s in allStates}
@@ -171,6 +170,7 @@ def logicBasedSearch(problem):
 
         if (s in visitedStates):
             continue
+        print(s)
 
         visitedStates += [s]
 
@@ -188,37 +188,37 @@ def logicBasedSearch(problem):
 
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
-            wumpusClause = Clause(set([Literal(Labels.WUMPUS, sc, False)]))
-            capsuleClause = Clause(set([Literal(Labels.POISON, sc, False)]))
-            teleporterClause = Clause(set([Literal(Labels.TELEPORTER, sc, False)]))
-            safeClause = Clause(set([Literal(Labels.SAFE, sc, False)]))
+            wumpusLiteral = Literal(Labels.WUMPUS, sc, False)
+            teleporterLiteral = Literal(Labels.TELEPORTER, sc, False)
+            poisonLiteral = Literal(Labels.POISON, sc, False)
+            safeLiteral = Literal(Labels.SAFE, sc, False)
 
-            if (resolution(baseKnowledge | explored, set([teleporterClause]))):
+            if (resolution(baseKnowledge | explored, Clause(set([teleporterLiteral])))):
                 memory[sc] += Labels.TELEPORTER
                 explored |= set([teleporterClause])
                 nextStates += [sc]
                 continue
 
-            if (resolution(baseKnowledge | explored, set([teleporterClause.negateAll()]))):
+            if (resolution(baseKnowledge | explored, Clause(set([teleporterLiteral.negate()])))):
                 explored |= set([teleporterClause.negateAll()])
 
-            if (resolution(baseKnowledge | explored, set([wumpusClause]))):
+            if (resolution(baseKnowledge | explored, Clause(set([wumpusLiteral])))):
                 memory[sc] += Labels.WUMPUS
                 explored |= set([wumpusClause])
                 continue
 
-            if (resolution(baseKnowledge | explored, set([wumpusClause.negateAll()]))):
+            if (resolution(baseKnowledge | explored, Clause(set([wumpusLiteral.negate()])))):
                 explored |= set([wumpusClause.negateAll()])
 
-            if (resolution(baseKnowledge | explored, set([capsuleClause]))):
+            if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral])))):
                 memory[sc] += Labels.POISON
                 explored |= set([capsuleClause])
                 continue
 
-            if (resolution(baseKnowledge | explored, set([capsuleClause.negateAll()]))):
+            if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral.negate()])))):
                 explored |= set([capsuleClause.negateAll()])
 
-            if (resolution(baseKnowledge | explored, set([safeClause]))):
+            if (resolution(baseKnowledge | explored, Clause(set([safeLiteral])))):
                 memory[sc] += Labels.SAFE
                 explored |= set([safeClause])
 
