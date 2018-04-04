@@ -250,13 +250,16 @@ def resolution(clauses, goal):
     resolvedPairs = set()
     setOfSupport = goal.negateAll()
 
-    removeRedundant(clauses, setOfSupport)
+    clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
-    if (len(clauses) == 0):
+    if (len(clauses) == 0 or len(setOfSupport) == 0):
         return False
 
     while True:
         newClausePairs = selectClauses(clauses, setOfSupport, resolvedPairs)
+
+        if (len(newClausePairs) == 0):
+            return False
 
         for clause1, clause2 in newClausePairs:
             resolvedPairs |= set([(clause1, clause2)])
@@ -266,43 +269,51 @@ def resolution(clauses, goal):
             if resolvent.isNIL():
                 return True
 
-            if resolvent.isValid() or \
-                resolvent.isRedundant(setOfSupport):
-                    continue
+            setOfSupport |= set([resolvent])
 
-            setOfSupport |= resolvent
+        clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
-        removeRedundant(clauses, setOfSupport)
-
-        if (len(clauses) == 0):
+        if (len(clauses) == 0 or len(setOfSupport) == 0):
             return False
 
 
 def removeRedundant(clauses, setOfSupport):
+    allClauses = clauses | setOfSupport
+
     newClauses = []
 
     for clause in clauses:
         if clause.isValid() or \
-            clause.isRedundant(clauses | setOfSupport):
+                clause.isRedundant(allClauses):
             continue
 
         newClauses.append(clause)
 
-    clauses = set(newClauses)
+    newSOS = []
+
+    for clause in setOfSupport:
+        if clause.isValid() or \
+                clause.isRedundant(allClauses):
+            continue
+
+        newSOS.append(clause)
+
+    return (set(newClauses), set(newSOS))
 
 def resolvePair(firstClause, secondClause):
     #Assume they are resolveable
-
-    newClauses = []
 
     for lit in firstClause.literals:
         if lit.negate() in secondClause.literals:
             A = lit
             negA = lit.negate()
 
-            for lit in firstClause:
-                newClauses.append(lit)
-            for lit in secondClause:
+            newClauses = []
+
+            for lit in (firstClause.literals | secondClause.literals):
+                if (lit == A or lit == negA):
+                    continue
+
                 newClauses.append(lit)
 
             return Clause(newClauses)
@@ -310,12 +321,18 @@ def resolvePair(firstClause, secondClause):
     return Clause([])
 
 def selectClauses(clauses, setOfSupport, resolvedPairs):
+    allClauses = clauses | setOfSupport
     result = set()
-    for clause1 in clauses:
-        for clause2 in setOfSupport:
+
+    for clause1 in setOfSupport:
+        for clause2 in allClauses:
+            if (clause1 == clause2 or \
+                    not clause1.isResolveableWith(clause2)):
+                continue
+
             newPair = set([(clause1, clause2)])
 
-            if newPair & resolvedPairs is not None:
+            if (len(newPair & resolvedPairs) == 0):
                 result |= newPair
 
     return result
