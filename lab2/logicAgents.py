@@ -9,8 +9,8 @@ import pacard
 
 class PacardAgent(Agent):
     """
-    This very general search agent finds a path to the goal of a problem 
-    by using a search algorithm. The search algorithm you will implement for 
+    This very general search agent finds a path to the goal of a problem
+    by using a search algorithm. The search algorithm you will implement for
     this excercise is based on refutation resolution.
 
 
@@ -86,7 +86,7 @@ class LogicSearchProblem(pacard.SearchProblem):
         self.walls = gameState.getWalls()
         self.startState = gameState.getPacmanPosition()
         self.capsules = gameState.getCapsules()
-        
+
         # hacky
         self.gameState = gameState
 
@@ -100,7 +100,7 @@ class LogicSearchProblem(pacard.SearchProblem):
 
         if warn and (gameState.getNumFood() != 1):
             print 'Warning: this does not look a Wumpus maze'
-        food = gameState.getFood() 
+        food = gameState.getFood()
         self.goal = food.asList()[0]
 
         self.costFn = costFn
@@ -174,7 +174,7 @@ class LogicSearchProblem(pacard.SearchProblem):
     def isWumpus(self, state):
         """
         Check if wumpus is present at the given state.
-        You should NOT use this function in your implementation - it is simply 
+        You should NOT use this function in your implementation - it is simply
         for the purposes of checking if the game is over - you could (and will)
         sometimes end up in the spots where Wumpus is.
         """
@@ -183,7 +183,7 @@ class LogicSearchProblem(pacard.SearchProblem):
     def isTeleporter(self, state):
         """
         Check if wumpus is present at the given state.
-        You should NOT use this function in your implementation - it is simply 
+        You should NOT use this function in your implementation - it is simply
         for the purposes of checking if the game is over.
         """
         return state == self.goal
@@ -191,7 +191,7 @@ class LogicSearchProblem(pacard.SearchProblem):
     def isPoisonCapsule(self, state):
         """
         Check if wumpus is present at the given state.
-        You should NOT use this function in your implementation - it is simply 
+        You should NOT use this function in your implementation - it is simply
         for the purposes of checking if the game is over - you could (and will)
         sometimes end up in the spots where the poisoned capsules are.
         """
@@ -221,21 +221,21 @@ class LogicSearchProblem(pacard.SearchProblem):
 
     def reconstructPath(self, visitedStates):
         """
-        Returns the fastest path taken while visiting a sequence of states 
-        in the given order. The path is not necessarily the optimal solution 
-        through the given states. 
+        Returns the fastest path taken while visiting a sequence of states
+        in the given order. The path is not necessarily the optimal solution
+        through the given states.
 
-        You should use this method to return the transitions as a result of your 
+        You should use this method to return the transitions as a result of your
         search problem.
         """
         path = []
         # trivial example, the start is the finish
-        if len(visitedStates) <= 1: 
-            return path 
+        if len(visitedStates) <= 1:
+            return path
         # call bfs on each pair of points
         current = visitedStates[0]
 
-        for future in visitedStates[1:]: 
+        for future in visitedStates[1:]:
             path += search.pathBetween(current, future, visitedStates, self.gameState)
             current = future
 

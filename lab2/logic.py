@@ -1,5 +1,5 @@
-import util 
-import functools 
+import util
+import functools
 
 class Labels:
     """
@@ -12,9 +12,9 @@ class Labels:
 
     """
     Some sets for simpler checks
-    >>> if literal.label in Labels.DEADLY: 
+    >>> if literal.label in Labels.DEADLY:
     >>>     # Don't go there!!!
-    """ 
+    """
     DEADLY = set([WUMPUS, POISON])
     WTP = set([WUMPUS, POISON, TELEPORTER])
 
@@ -29,20 +29,20 @@ class Labels:
 
 def stateWeight(state):
     """
-    To ensure consistency in exploring states, they will be sorted 
-    according to a simple linear combination. 
-    The maps will never be 
+    To ensure consistency in exploring states, they will be sorted
+    according to a simple linear combination.
+    The maps will never be
     larger than 20x20, and therefore this weighting will be consistent.
     """
-    x, y = state 
-    return 20*x + y 
+    x, y = state
+    return 20*x + y
 
 
 @functools.total_ordering
 class Literal:
     """
     A literal is an atom or its negation
-    In this case, a literal represents if a certain state (x,y) is or is not 
+    In this case, a literal represents if a certain state (x,y) is or is not
     the location of GhostWumpus, or the poisoned pills.
     """
 
@@ -51,14 +51,14 @@ class Literal:
         Set all values. Notice that the state is remembered twice - you
         can use whichever representation suits you better.
         """
-        x,y = state 
-        
-        self.x = x 
-        self.y = y 
-        self.state = state 
+        x,y = state
+
+        self.x = x
+        self.y = y
+        self.state = state
 
         self.negative = negative
-        self.label = label 
+        self.label = label
 
     def __key(self):
         """
@@ -79,7 +79,7 @@ class Literal:
         return first.__key() == second.__key()
 
     def __lt__(self, other):
-        """ 
+        """
         Less than check
         by using @functools decorator, this is enough to infer ordering
         """
@@ -118,7 +118,7 @@ class Literal:
 
     def isWTP(self):
         """
-        Check if a literal represents GhostWumpus, the Teleporter or 
+        Check if a literal represents GhostWumpus, the Teleporter or
         a poisoned pill
         """
         return self.label in Labels.WTP
@@ -136,13 +136,13 @@ class Literal:
         return self.label == Labels.TELEPORTER
 
 
-class Clause: 
-    """ 
-    A disjunction of finitely many unique literals. 
-    The Clauses have to be in the CNF so that resolution can be applied to them. The code 
-    was written assuming that the clauses are in CNF, and will not work otherwise. 
+class Clause:
+    """
+    A disjunction of finitely many unique literals.
+    The Clauses have to be in the CNF so that resolution can be applied to them. The code
+    was written assuming that the clauses are in CNF, and will not work otherwise.
 
-    A sample of instantiating a clause (~B v C): 
+    A sample of instantiating a clause (~B v C):
 
     >>> premise = Clause(set([Literal('b', (0, 0), True), Literal('c', (0, 0), False)]))
 
@@ -151,13 +151,13 @@ class Clause:
     >>> LiteralC = Literal('c', (0, 0), False)
 
     >>> premise = Clause(set([[LiteralNotB, LiteralC]]))
-    """ 
+    """
 
     def __init__(self, literals):
         """
-        The constructor for a clause. The clause assumes that the data passed 
-        is an iterable (e.g., list, set), or a single literal in case of a unit clause. 
-        In case of unit clauses, the Literal is wrapped in a list to be safely passed to 
+        The constructor for a clause. The clause assumes that the data passed
+        is an iterable (e.g., list, set), or a single literal in case of a unit clause.
+        In case of unit clauses, the Literal is wrapped in a list to be safely passed to
         the set.
         """
         if not type(literals) == set and not type(literals) == list:
@@ -167,14 +167,14 @@ class Clause:
 
     def isResolveableWith(self, otherClause):
         """
-        Check if a literal from the clause is resolveable by another clause - 
+        Check if a literal from the clause is resolveable by another clause -
         if the other clause contains a negation of one of the literals.
-        e.g., (~A) and (A v ~B) are examples of two clauses containing opposite literals 
+        e.g., (~A) and (A v ~B) are examples of two clauses containing opposite literals
         """
-        for literal in self.literals: 
+        for literal in self.literals:
             if literal.negate() in otherClause.literals:
-                return True 
-        return False 
+                return True
+        return False
 
     def isRedundant(self, otherClauses):
         """
@@ -188,7 +188,7 @@ class Clause:
 
     def negateAll(self):
         """
-        Negate all the literals in the clause to be used 
+        Negate all the literals in the clause to be used
         as the supporting set for resolution.
         """
         negations = set()
@@ -196,6 +196,16 @@ class Clause:
             clause = Clause(literal.negate())
             negations.add(clause)
         return negations
+
+    #My functions
+    def isValid(self):
+        for literal in self.literals:
+            if literal.negate() in self.literals:
+                return True
+        return False
+
+    def isNIL(self):
+        return len(self.literals) == 0
 
     def __str__(self):
         """
@@ -230,63 +240,90 @@ class Clause:
 
 def resolution(clauses, goal):
     """
-    Implement refutation resolution. 
+    Implement refutation resolution.
 
-    The pseudocode for the algorithm of refutation resolution can be found 
-    in the slides. The implementation here assumes you will use set of support 
-    and simplification strategies. We urge you to go through the slides and 
+    The pseudocode for the algorithm of refutation resolution can be found
+    in the slides. The implementation here assumes you will use set of support
+    and simplification strategies. We urge you to go through the slides and
     carefully design the code before implementing.
     """
     resolvedPairs = set()
-    setOfSupport = goal.negateAll() 
-    """
-    ####################################
-    ###                              ###
-    ###        YOUR CODE HERE        ###
-    ###                              ###
-    ####################################
-    """
+    setOfSupport = goal.negateAll()
+
+    removeRedundant(clauses, setOfSupport)
+
+    if (len(clauses) == 0):
+        return False
+
+    while True:
+        newClausePairs = selectClauses(clauses, setOfSupport, resolvedPairs)
+
+        for clause1, clause2 in newClausePairs:
+            resolvedPairs |= set([(clause1, clause2)])
+
+            resolvent = resolvePair(clause1, clause2)
+
+            if resolvent.isNIL():
+                return True
+
+            if resolvent.isValid() or \
+                resolvent.isRedundant(setOfSupport):
+                    continue
+
+            setOfSupport |= resolvent
+
+        removeRedundant(clauses, setOfSupport)
+
+        if (len(clauses) == 0):
+            return False
+
 
 def removeRedundant(clauses, setOfSupport):
-    """
-    Remove redundant clauses (clauses that are subsets of other clauses)
-    from the aforementioned sets. 
-    Be careful not to do the operation in-place as you will modify the 
-    original sets. (why?)
-    ####################################
-    ###                              ###
-    ###        YOUR CODE HERE        ###
-    ###                              ###
-    ####################################
-    """
-    pass 
+    newClauses = []
+
+    for clause in clauses:
+        if clause.isValid() or \
+            clause.isRedundant(clauses | setOfSupport):
+            continue
+
+        newClauses.append(clause)
+
+    clauses = set(newClauses)
 
 def resolvePair(firstClause, secondClause):
-    """
-    Resolve a pair of clauses.
-    ####################################
-    ###                              ###
-    ###        YOUR CODE HERE        ###
-    ###                              ###
-    ####################################
-    """
-    pass 
+    #Assume they are resolveable
+
+    newClauses = []
+
+    for lit in firstClause.literals:
+        if lit.negate() in secondClause.literals:
+            A = lit
+            negA = lit.negate()
+
+            for lit in firstClause:
+                newClauses.append(lit)
+            for lit in secondClause:
+                newClauses.append(lit)
+
+            return Clause(newClauses)
+
+    return Clause([])
 
 def selectClauses(clauses, setOfSupport, resolvedPairs):
-    """
-    Select pairs of clauses to resolve.
-    ####################################
-    ###                              ###
-    ###        YOUR CODE HERE        ###
-    ###                              ###
-    ####################################
-    """
-    pass 
+    result = set()
+    for clause1 in clauses:
+        for clause2 in setOfSupport:
+            newPair = set([(clause1, clause2)])
+
+            if newPair & resolvedPairs is not None:
+                result |= newPair
+
+    return result
 
 def testResolution():
     """
-    A sample of a resolution problem that should return True. 
-    You should come up with your own tests in order to validate your code. 
+    A sample of a resolution problem that should return True.
+    You should come up with your own tests in order to validate your code.
     """
     premise1 = Clause(set([Literal('a', (0, 0), True), Literal('b', (0, 0), False)]))
     premise2 = Clause(set([Literal('b', (0, 0), True), Literal('c', (0, 0), False)]))
@@ -297,9 +334,9 @@ def testResolution():
 
 if __name__ == '__main__':
     """
-    The main function - if you run logic.py from the command line by 
-    >>> python logic.py 
+    The main function - if you run logic.py from the command line by
+    >>> python logic.py
 
-    this is the starting point of the code which will run. 
-    """ 
-    testResolution() 
+    this is the starting point of the code which will run.
+    """
+    testResolution()
