@@ -60,6 +60,7 @@ def miniWumpusSearch(problem):
     n = Directions.NORTH
     return  [e, n, n]
 
+#TODO:
 def chooseNextState(nextStates, memory):
     st = filter(lambda s: Labels.TELEPORTER in memory[s], nextStates)
     if (len(st) != 0):
@@ -153,7 +154,7 @@ def logicBasedSearch(problem):
     startState = problem.getStartState()
 
     nextStates = [startState]
-    memory = {s: "" for s in allStates}
+    memory = {s: set() for s in allStates}
     explored = set()
 
     while len(nextStates) != 0:
@@ -174,15 +175,12 @@ def logicBasedSearch(problem):
         visitedStates += [s]
 
         if (problem.isWumpusClose(s)):
-            memory[s] += Labels.WUMPUS_STENCH
             explored |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, s, False)]))])
 
         if (problem.isPoisonCapsuleClose(s)):
-            memory[s] += Labels.POISON_FUMES
             explored |= set([Clause(set([Literal(Labels.POISON_FUMES, s, False)]))])
 
         if (problem.isTeleporterClose(s)):
-            memory[s] += Labels.TELEPORTER_GLOW
             explored |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, s, False)]))])
 
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
@@ -192,8 +190,9 @@ def logicBasedSearch(problem):
             poisonLiteral = Literal(Labels.POISON, sc, False)
             safeLiteral = Literal(Labels.SAFE, sc, False)
 
+            #TODO:
             if (resolution(baseKnowledge | explored, Clause(set([teleporterLiteral])))):
-                memory[sc] += Labels.TELEPORTER
+                memory[s] |= set([teleporterClause])
                 explored |= set([teleporterClause])
                 nextStates += [sc]
                 continue
@@ -202,7 +201,7 @@ def logicBasedSearch(problem):
                 explored |= set([teleporterClause.negateAll()])
 
             if (resolution(baseKnowledge | explored, Clause(set([wumpusLiteral])))):
-                memory[sc] += Labels.WUMPUS
+                memory[s] |= set([wumpusClause])
                 explored |= set([wumpusClause])
                 continue
 
@@ -210,15 +209,14 @@ def logicBasedSearch(problem):
                 explored |= set([wumpusClause.negateAll()])
 
             if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral])))):
-                memory[sc] += Labels.POISON
-                explored |= set([capsuleClause])
+                memory[s] |= set([poisonLiteral])
+                explored |= set([])
                 continue
 
             if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral.negate()])))):
                 explored |= set([capsuleClause.negateAll()])
 
             if (resolution(baseKnowledge | explored, Clause(set([safeLiteral])))):
-                memory[sc] += Labels.SAFE
                 explored |= set([safeClause])
 
             nextStates += [sc]

@@ -89,8 +89,9 @@ class Literal:
         """
         Overloading the str() operator - convert the object to a string
         """
-        if self.negative: return '~' + self.label
-        return self.label
+        s = self.label + '(' + str(self.x) + ', ' + str(self.y) + ')'
+        if self.negative: s = '~' + s
+        return s
 
     def __repr__(self):
         """
@@ -250,17 +251,13 @@ def resolution(clauses, goal):
     resolvedPairs = set()
     setOfSupport = goal.negateAll()
 
-    clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
+    print(clauses, setOfSupport)
 
-    if (len(clauses) + len(setOfSupport) == 0):
-        return True
+    clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
     while True:
         newClausePairs = selectClauses(clauses, setOfSupport, resolvedPairs)
         newResolvents = set()
-
-        if (len(newClausePairs) == 0):
-            return False
 
         for clause1, clause2 in newClausePairs:
             resolvedPairs |= set([(clause1, clause2)])
@@ -272,16 +269,12 @@ def resolution(clauses, goal):
 
             newResolvents |= set([resolvent])
 
-        if (newResolvents <= clauses):
+        if (newResolvents <= (clauses | setOfSupport)):
             return False
 
         setOfSupport |= newResolvents
 
         clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
-
-        if (len(clauses) + len(setOfSupport) == 0):
-            return True
-
 
 def removeRedundant(clauses, setOfSupport):
     allClauses = clauses | setOfSupport
