@@ -113,10 +113,9 @@ def logicBasedSearch(problem):
     width = max(map(lambda (x, y): x, problem.walls.asList()))
     height = max(map(lambda (x, y): y, problem.walls.asList()))
 
-    kl = []
-    for x in range(width):
-        for y in range(height):
-            kl += [(x, y)]
+    from itertools import product
+
+    kl = product(range(width), range(height))
 
     allStates = set(kl)
 
@@ -124,31 +123,53 @@ def logicBasedSearch(problem):
     for cur in allStates:
         succ = map(lambda (s, a, c): s, problem.getSuccessors(cur))
 
-        succ2 = []
-        for st1 in succ:
-            for st2 in succ:
-                if (st1 != st2):
-                    succ2 += [(st1, st2)]
+        succ2 = filter(lambda (x, y): x != y, product(succ, succ))
 
         ns = set()
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] + [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.WUMPUS, sc, True)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
+                              [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] + [Literal(Labels.POISON, sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.POISON, sc, True)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False),
+                               Literal(Labels.WUMPUS, sc, True)]))
+                               for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] + [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False), Literal(Labels.TELEPORTER, sc, True)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] +
+                              [Literal(Labels.POISON, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, True), Literal(Labels.WUMPUS, st, True)])) for st in allStates - set([cur])])
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.SAFE, sc, False)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
+                               Literal(Labels.POISON, sc, True)]))
+                               for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, False), Literal(Labels.POISON, cur, False), Literal(Labels.SAFE, cur, False)]))])
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] +
+                              [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True), Literal(Labels.WUMPUS_STENCH, st2, True), Literal(Labels.WUMPUS, cur, False)])) for (st1, st2) in succ2])
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False),
+                                       Literal(Labels.TELEPORTER, sc, True)]))
+                                       for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True), Literal(Labels.TELEPORTER_GLOW, st2, True), Literal(Labels.TELEPORTER, cur, False)])) for (st1, st2) in succ2])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, True),
+                               Literal(Labels.WUMPUS, st, True)]))
+                               for st in (allStates - set([cur]))])
+
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
+                               Literal(Labels.WUMPUS_STENCH, cur, False),
+                               Literal(Labels.SAFE, sc, False)]))
+                               for sc in succ])
+
+        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, False),
+                               Literal(Labels.POISON, cur, False),
+                               Literal(Labels.SAFE, cur, False)]))])
+
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True),
+                               Literal(Labels.WUMPUS_STENCH, st2, True),
+                               Literal(Labels.WUMPUS, cur, False)]))
+                               for (st1, st2) in succ2])
+
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True),
+                               Literal(Labels.TELEPORTER_GLOW, st2, True),
+                               Literal(Labels.TELEPORTER, cur, False)]))
+                               for (st1, st2) in succ2])
 
         baseKnowledge |= ns
 
