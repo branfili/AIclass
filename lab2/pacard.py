@@ -60,18 +60,17 @@ def miniWumpusSearch(problem):
     n = Directions.NORTH
     return  [e, n, n]
 
-#TODO:
 def chooseNextState(nextStates, memory):
-    st = filter(lambda s: any(lambda lit: lit.isTeleporter(), memory[s]), nextStates)
+    st = filter(lambda s: any(lit.isTeleporter() for lit in memory[s]), nextStates)
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: any(lambda lit: lit.isSafe(), memory[s]), nextStates)
+    st = filter(lambda s: any(lit.isSafe() for lit in memory[s]), nextStates)
     st.sort(lambda x, y: stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: all(lambda lit: not lit.isWTP(), memory[s]), nextStates)
+    st = filter(lambda s: all(not lit.isWTP() for lit in memory[s]), nextStates)
     st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
@@ -149,6 +148,10 @@ def logicBasedSearch(problem):
 
         baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True), Literal(Labels.TELEPORTER_GLOW, st2, True), Literal(Labels.TELEPORTER, cur, False)])) for (st1, st2) in succ2])
 
+        if (cur == (0, 0)):
+            for clause in baseKnowledge:
+                print(clause)
+
     # array in order to keep the ordering
     visitedStates = []
     startState = problem.getStartState()
@@ -207,7 +210,7 @@ def logicBasedSearch(problem):
                     if (not literal.isDeadly()):
                         nextState += [sc]
                         break
-                else if (resolution(baseKnowledge | explored, clause.negateAll().pop())):
+                elif (resolution(baseKnowledge | explored, clause.negateAll().pop())):
                     memory[sc] |= clause.negateAll()
                     explored |= clause.negateAll()
 
