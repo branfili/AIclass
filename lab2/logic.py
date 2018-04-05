@@ -255,8 +255,6 @@ def resolution(clauses, goal):
     if (len(clauses) + len(setOfSupport) == 0):
         return True
 
-    newResolvents = set()
-
     while True:
         newClausePairs = selectClauses(clauses, setOfSupport, resolvedPairs)
         newResolvents = set()
