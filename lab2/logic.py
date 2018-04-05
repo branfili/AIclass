@@ -312,19 +312,10 @@ def resolvePair(firstClause, secondClause):
     #Assume they are resolveable
 
     for lit in firstClause.literals:
-        if lit.negate() in secondClause.literals:
-            A = lit
-            negA = lit.negate()
+        if lit.negate() not in secondClause.literals:
+            continue
 
-            newClauses = []
-
-            for lit in (firstClause.literals | secondClause.literals):
-                if (lit == A or lit == negA):
-                    continue
-
-                newClauses += [lit]
-
-            return Clause(newClauses)
+        return Clause((firstClause.literals | secondClause.literals) - set([lit, lit.negate()]))
 
     return Clause([])
 
@@ -335,13 +326,11 @@ def selectClauses(clauses, setOfSupport, resolvedPairs):
     for clause1 in setOfSupport:
         for clause2 in allClauses:
             if (clause1 == clause2 or \
+                    (clause1, clause2) in resolvedPairs or \
                     not clause1.isResolveableWith(clause2)):
                 continue
 
-            newPair = set([(clause1, clause2)])
-
-            if (len(newPair & resolvedPairs) == 0):
-                result |= newPair
+            result |= set([(clause1, clause2)])
 
     return result
 

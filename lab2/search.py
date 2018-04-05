@@ -13,9 +13,9 @@ class SearchNode:
 
     def __init__(self, position, parent=None, transition=None, cost=0, heuristic=0):
         """
-        Basic constructor which copies the values. Remember, you can access all the 
-        values of a python object simply by referencing them - there is no need for 
-        a getter method. 
+        Basic constructor which copies the values. Remember, you can access all the
+        values of a python object simply by referencing them - there is no need for
+        a getter method.
         """
         self.position = position
         self.parent = parent
@@ -28,7 +28,7 @@ class SearchNode:
         Check if the node has a parent.
         returns True in case it does, False otherwise
         """
-        return self.parent == None 
+        return self.parent == None
 
     def unpack(self):
         """
@@ -42,9 +42,9 @@ class SearchNode:
         Reconstruct a path to the initial state from the current node.
         """
         moves = []
-        
+
         node = copy.deepcopy(self)
-        while node.parent is not None: 
+        while node.parent is not None:
             moves.insert(0, node.transition)
             node = node.parent
 
@@ -53,7 +53,7 @@ class SearchNode:
 
 def constrainedBreadthFirstSearch(problem, legalStates):
     """
-    A breadth-first search that finds a shortest path to a 
+    A breadth-first search that finds a shortest path to a
     state going only through given states.
     """
     # we need a set to remember all visited states
@@ -76,13 +76,13 @@ def constrainedBreadthFirstSearch(problem, legalStates):
         if problem.isGoalState(currentState):
             return currentNode.backtrack()
 
-        if currentState in visitedStates: 
+        if currentState in visitedStates:
             continue
 
         visitedStates.add(currentState)
 
         for futureState, move, _ in problem.getSuccessors(currentState):
-            if futureState not in visitedStates and futureState in legalStates: 
+            if futureState not in visitedStates and futureState in legalStates:
                 futureNode = SearchNode(futureState, parent=currentNode, transition=move)
                 searchQueue.push(futureNode)
 
@@ -184,8 +184,8 @@ class PositionSearchProblem():
 
 def pathBetween(point1, point2, legalStates, gameState):
     """
-    Returns a possible shortest path through visited states 
-    between any two points, using constrained BFS 
+    Returns a possible shortest path through visited states
+    between any two points, using constrained BFS
     The gameState can be any game state -- Pacman's
     position in that state is ignored.
 
