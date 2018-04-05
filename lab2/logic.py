@@ -251,8 +251,6 @@ def resolution(clauses, goal):
     resolvedPairs = set()
     setOfSupport = goal.negateAll()
 
-    print(clauses, setOfSupport)
-
     clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
     while True:
