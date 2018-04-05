@@ -130,27 +130,27 @@ def logicBasedSearch(problem):
                 if (st1 != st2):
                     succ2 += [(st1, st2)]
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] + [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
-        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.WUMPUS, sc, True)])) for sc in succ])
+        ns = set()
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] + [Literal(Labels.POISON, sc, False) for sc in succ]))])
-        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.POISON, sc, True)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] + [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.WUMPUS, sc, True)])) for sc in succ])
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] + [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
-        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False), Literal(Labels.TELEPORTER, sc, True)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] + [Literal(Labels.POISON, sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.POISON, sc, True)])) for sc in succ])
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS, cur, True), Literal(Labels.WUMPUS, st, True)])) for st in allStates - set([cur])])
-        baseKnowledge |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.SAFE, sc, False)])) for sc in succ])
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] + [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False), Literal(Labels.TELEPORTER, sc, True)])) for sc in succ])
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS, cur, False), Literal(Labels.POISON, cur, False), Literal(Labels.SAFE, cur, False)]))])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, True), Literal(Labels.WUMPUS, st, True)])) for st in allStates - set([cur])])
+        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False), Literal(Labels.WUMPUS_STENCH, cur, False), Literal(Labels.SAFE, sc, False)])) for sc in succ])
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True), Literal(Labels.WUMPUS_STENCH, st2, True), Literal(Labels.WUMPUS, cur, False)])) for (st1, st2) in succ2])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, False), Literal(Labels.POISON, cur, False), Literal(Labels.SAFE, cur, False)]))])
 
-        baseKnowledge |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True), Literal(Labels.TELEPORTER_GLOW, st2, True), Literal(Labels.TELEPORTER, cur, False)])) for (st1, st2) in succ2])
+        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True), Literal(Labels.WUMPUS_STENCH, st2, True), Literal(Labels.WUMPUS, cur, False)])) for (st1, st2) in succ2])
 
-        if (cur == (0, 0)):
-            for clause in baseKnowledge:
-                print(clause)
+        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True), Literal(Labels.TELEPORTER_GLOW, st2, True), Literal(Labels.TELEPORTER, cur, False)])) for (st1, st2) in succ2])
+
+        baseKnowledge |= ns
 
     # array in order to keep the ordering
     visitedStates = []
@@ -194,6 +194,7 @@ def logicBasedSearch(problem):
 
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
+            #TODO: print(Clause(set[Literal(Labels.WUMPUS, sc, False)]))
             wumpusClause = Clause(set[Literal(Labels.WUMPUS, sc, False)])
             teleporterClause = Clause(set[Literal(Labels.TELEPORTER, sc, False)])
             poisonClause = Clause(set[Literal(Labels.POISON, sc, False)])
