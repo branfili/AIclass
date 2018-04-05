@@ -62,16 +62,16 @@ def miniWumpusSearch(problem):
 
 #TODO:
 def chooseNextState(nextStates, memory):
-    st = filter(lambda s: Labels.TELEPORTER in memory[s], nextStates)
+    st = filter(lambda s: any(lambda lit: lit.isTeleporter(), memory[s]), nextStates)
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: Labels.SAFE in memory[s], nextStates)
+    st = filter(lambda s: any(lambda lit: lit.isSafe(), memory[s]), nextStates)
     st.sort(lambda x, y: stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: memory[s] == "", nextStates)
+    st = filter(lambda s: all(lambda lit: not lit.isWTP(), memory[s]), nextStates)
     st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
@@ -175,51 +175,44 @@ def logicBasedSearch(problem):
         visitedStates += [s]
 
         if (problem.isWumpusClose(s)):
-            explored |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, s, False)]))])
+            stenchClause = Clause(set([Literal(Labels.WUMPUS_STENCH, s, False)]))
+            memory[s] |= set([stenchClause])
+            explored |= set([stenchClause])
 
         if (problem.isPoisonCapsuleClose(s)):
-            explored |= set([Clause(set([Literal(Labels.POISON_FUMES, s, False)]))])
+            fumesClause = Clause(set([Literal(Labels.POISON_FUMES, s, False)]))
+            memory[s] |= set([fumesClause])
+            explored |= set([fumesClause])
 
         if (problem.isTeleporterClose(s)):
-            explored |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, s, False)]))])
+            glowClause = Clause(set([Literal(Labels.TELEPORTER_GLOW, s, False)]))
+            memory[s] |= set([glowClause])
+            explored |= set([glowClause])
 
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
-            wumpusLiteral = Literal(Labels.WUMPUS, sc, False)
-            teleporterLiteral = Literal(Labels.TELEPORTER, sc, False)
-            poisonLiteral = Literal(Labels.POISON, sc, False)
-            safeLiteral = Literal(Labels.SAFE, sc, False)
+            wumpusClause = Clause(set[Literal(Labels.WUMPUS, sc, False)])
+            teleporterClause = Clause(set[Literal(Labels.TELEPORTER, sc, False)])
+            poisonClause = Clause(set[Literal(Labels.POISON, sc, False)])
+            safeClause = Clause(set[Literal(Labels.SAFE, sc, False)])
 
-            #TODO:
-            if (resolution(baseKnowledge | explored, Clause(set([teleporterLiteral])))):
-                memory[s] |= set([teleporterClause])
-                explored |= set([teleporterClause])
-                nextStates += [sc]
-                continue
+            for clause in [teleporterClause, wumpusClause, poisonClause, safeClause]:
+                if (resolution(baseKnowledge | explored, clause)):
+                    memory[sc] |= set([clause])
+                    explored |= set([clause])
 
-            if (resolution(baseKnowledge | explored, Clause(set([teleporterLiteral.negate()])))):
-                explored |= set([teleporterClause.negateAll()])
+                    literal = clause.pop()
+                    clause = set([literal])
 
-            if (resolution(baseKnowledge | explored, Clause(set([wumpusLiteral])))):
-                memory[s] |= set([wumpusClause])
-                explored |= set([wumpusClause])
-                continue
+                    if (not literal.isDeadly()):
+                        nextState += [sc]
+                        break
+                else if (resolution(baseKnowledge | explored, clause.negateAll().pop())):
+                    memory[sc] |= clause.negateAll()
+                    explored |= clause.negateAll()
 
-            if (resolution(baseKnowledge | explored, Clause(set([wumpusLiteral.negate()])))):
-                explored |= set([wumpusClause.negateAll()])
-
-            if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral])))):
-                memory[s] |= set([poisonLiteral])
-                explored |= set([])
-                continue
-
-            if (resolution(baseKnowledge | explored, Clause(set([poisonLiteral.negate()])))):
-                explored |= set([capsuleClause.negateAll()])
-
-            if (resolution(baseKnowledge | explored, Clause(set([safeLiteral])))):
-                explored |= set([safeClause])
-
-            nextStates += [sc]
+                    if (clause == safeClause):
+                        nextState += [sc]
 
     return problem.reconstructPath(visitedStates)
 
