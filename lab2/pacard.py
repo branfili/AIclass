@@ -70,7 +70,7 @@ def chooseNextState(nextStates, memory):
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: all(not lit.isWTP() for lit in memory[s]), nextStates)
+    st = filter(lambda s: len(memory[s]) == 0, nextStates)
     st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
@@ -148,9 +148,9 @@ def logicBasedSearch(problem):
                                        Literal(Labels.TELEPORTER, sc, True)]))
                                        for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, True),
-                               Literal(Labels.WUMPUS, st, True)]))
-                               for st in (allStates - set([cur]))])
+        ns |= set([Clause(set[Literal(Labels.WUMPUS, cur, True),
+                              Literal(Labels.WUMPUS, st, True)])
+                              for st in allStates - set([cur])])
 
         ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
                                Literal(Labels.WUMPUS_STENCH, cur, False),
@@ -188,7 +188,7 @@ def logicBasedSearch(problem):
 
         nextStates.remove(s)
 
-        if Labels.TELEPORTER in memory[s]:
+        if any(lit.isTeleporter() for lit in memory[s]):
             if (s in visitedStates):
                 visitedStates += [s]
             break
@@ -196,6 +196,7 @@ def logicBasedSearch(problem):
         if (s in visitedStates):
             continue
 
+        print (s)
         visitedStates += [s]
 
         if (problem.isWumpusClose(s)):
@@ -223,20 +224,20 @@ def logicBasedSearch(problem):
             for literal in [teleporterLiteral, wumpusLiteral, poisonLiteral, safeLiteral]:
                 clause = Clause(literal)
                 negClause = Clause(literal.negate())
+                print(literal)
 
-                if (resolution(baseKnowledge | explored, clause)):
+                if (resolution(baseKnowledge.copy() | explored.copy(), clause)):
                     memory[sc] |= set([clause])
                     explored |= set([clause])
 
                     if (not literal.isDeadly()):
                         nextState += [sc]
                         break
-                elif (resolution(baseKnowledge | explored, negClause)):
-                    memory[sc] |= set([negClause])
+                elif (resolution(baseKnowledge.copy() | explored.copy(), negClause)):
                     explored |= set([negClause])
 
-                    if (literal.isSafe()):
-                        nextState += [sc]
+                if (len(memory[sc]) == 0):
+                    nextStates += [sc]
 
     return problem.reconstructPath(visitedStates)
 
