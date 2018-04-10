@@ -111,30 +111,38 @@ class Literal:
         """
         return Literal(self.label, self.state, not self.negative)
 
+    #my functions
+    def getState(self):
+        return self.state
+
     def isDeadly(self):
         """
         Check if a literal represents a deadly state
         """
-        return self.label in Labels.DEADLY
+        return (self.label in Labels.DEADLY and \
+                not self.negative)
 
     def isWTP(self):
         """
         Check if a literal represents GhostWumpus, the Teleporter or
         a poisoned pill
         """
-        return self.label in Labels.WTP
+        return (self.label in Labels.WTP and \
+                not self.negative)
 
     def isSafe(self):
         """
         Check if a literal represents a safe spot
         """
-        return self.label == Labels.SAFE
+        return (self.label == Labels.SAFE and \
+                not self.negative)
 
     def isTeleporter(self):
         """
         Check if a literal represents the teleporter
         """
-        return self.label == Labels.TELEPORTER
+        return (self.label == Labels.TELEPORTER and \
+                not self.negative)
 
 
 class Clause:
@@ -207,6 +215,11 @@ class Clause:
 
     def isNIL(self):
         return len(self.literals) == 0
+
+    def getFirst(self):
+        lit = self.literals.pop()
+        self.literals.add(lit)
+        return lit
 
     def __str__(self):
         """

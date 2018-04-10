@@ -60,20 +60,48 @@ def miniWumpusSearch(problem):
     n = Directions.NORTH
     return  [e, n, n]
 
+#my functions
 def chooseNextState(nextStates, memory):
-    st = filter(lambda s: any(lit.isTeleporter() for lit in memory[s]), nextStates)
+    st = filter(lambda s: any(cl.getFirst().isTeleporter() for cl in memory[s]), nextStates)
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: any(lit.isSafe() for lit in memory[s]), nextStates)
+    st = filter(lambda s: any(cl.getFirst().isSafe() for cl in memory[s]), nextStates)
     st.sort(lambda x, y: stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
 
-    st = filter(lambda s: len(memory[s]) == 0, nextStates)
+    st = filter(lambda s: safe(memory[s]), nextStates)
     st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
     if (len(st) != 0):
         return st[0]
+
+def environment(baseKnowledge, exploredKnowledge, allStates, d, cur):
+    result = set()
+
+    for st in allStates:
+        if (util.manhattanDistance(cur, st) > d):
+            continue
+
+        for clause in (baseKnowledge[st] | exploredKnowledge[st]):
+            flag = True
+
+            for lit in clause.literals:
+                st2 = lit.getState()
+                if (util.manhattanDistance(cur, st2) > d):
+                    flag = False
+                    break
+
+            if (flag):
+                result |= set([clause])
+
+    return result
+
+def safe(knowledge):
+    if (len(knowledge)) == 0:
+        return True
+
+    return all(not cl.getFirst().isDeadly() for cl in knowledge)
 
 def logicBasedSearch(problem):
     """
@@ -115,63 +143,85 @@ def logicBasedSearch(problem):
 
     from itertools import product
 
-    kl = product(range(width), range(height))
+    allStates = set(product(range(1, width), range(1, height)))
 
-    allStates = set(kl)
+    bk = {st: set() for st in allStates}
 
-    baseKnowledge = set()
     for cur in allStates:
         succ = map(lambda (s, a, c): s, problem.getSuccessors(cur))
 
-        succ2 = filter(lambda (x, y): x != y, product(succ, succ))
-
-        ns = set()
-
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
+        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
                               [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False),
+        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False),
                                Literal(Labels.WUMPUS, sc, True)]))
                                for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] +
+        bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] +
                               [Literal(Labels.POISON, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
+        bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
                                Literal(Labels.POISON, sc, True)]))
                                for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] +
+        bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] +
                               [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
 
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False),
+        bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False),
                                        Literal(Labels.TELEPORTER, sc, True)]))
                                        for sc in succ])
 
-        ns |= set([Clause(set[Literal(Labels.WUMPUS, cur, True),
-                              Literal(Labels.WUMPUS, st, True)])
-                              for st in allStates - set([cur])])
+        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS, cur, True),
+                               Literal(Labels.WUMPUS, st, True)]))
+                               for st in allStates - set([cur])])
 
-        ns |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
+        bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
                                Literal(Labels.WUMPUS_STENCH, cur, False),
                                Literal(Labels.SAFE, sc, False)]))
                                for sc in succ])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS, cur, False),
+        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS, cur, False),
                                Literal(Labels.POISON, cur, False),
                                Literal(Labels.SAFE, cur, False)]))])
 
-        ns |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, st1, True),
-                               Literal(Labels.WUMPUS_STENCH, st2, True),
-                               Literal(Labels.WUMPUS, cur, False)]))
-                               for (st1, st2) in succ2])
+        bk[cur] |= set([Clause(set([Literal(label, cur, True),
+                                    Literal(Labels.SAFE, cur, True)]))
+                                    for label in [Labels.WUMPUS,
+                                                  Labels.POISON,
+                                                  Labels.WUMPUS_STENCH,
+                                                  Labels.POISON_FUMES]])
 
-        ns |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, st1, True),
-                               Literal(Labels.TELEPORTER_GLOW, st2, True),
-                               Literal(Labels.TELEPORTER, cur, False)]))
-                               for (st1, st2) in succ2])
+        from game import Directions
+        from game import Actions
 
-        baseKnowledge |= ns
+        for action in [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]:
+            x, y = cur
+            dx, dy = Actions.directionToVector(action)
+            dx2, dy2 = Actions.directionToVector(Directions.RIGHT[action])
+            dx3, dy3 = Actions.directionToVector(Directions.REVERSE[action])
+
+            suc = int(x + dx), int(y + dy)
+            suc2 = int(x + dx2), int(y + dy2)
+            suc21 = int(x + dx + dx2), int(y + dy + dy2)
+            suc3 = int(x + dx3), int(y + dy3)
+
+            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
+                                        Literal(Labels.WUMPUS_STENCH, suc2, True),
+                                        Literal(Labels.WUMPUS, cur, True),
+                                        Literal(Labels.WUMPUS, suc21, False)]))])
+
+            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
+                                        Literal(Labels.TELEPORTER_GLOW, suc2, True),
+                                        Literal(Labels.TELEPORTER, cur, True),
+                                        Literal(Labels.TELEPORTER, suc21, False)]))])
+
+            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
+                                        Literal(Labels.WUMPUS_STENCH, suc3, True),
+                                        Literal(Labels.WUMPUS, cur, True)]))])
+
+            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
+                                        Literal(Labels.TELEPORTER_GLOW, suc3, True),
+                                        Literal(Labels.TELEPORTER, cur, True)]))])
 
     # array in order to keep the ordering
     visitedStates = []
@@ -179,7 +229,8 @@ def logicBasedSearch(problem):
 
     nextStates = [startState]
     memory = {s: set() for s in allStates}
-    explored = set()
+
+    RADIUS = 2
 
     while len(nextStates) != 0:
         s = chooseNextState(nextStates, memory)
@@ -188,31 +239,23 @@ def logicBasedSearch(problem):
 
         nextStates.remove(s)
 
-        if any(lit.isTeleporter() for lit in memory[s]):
-            if (s in visitedStates):
-                visitedStates += [s]
+        if any(cl.getFirst().isTeleporter() for cl in memory[s]):
+            visitedStates += [s]
             break
 
         if (s in visitedStates):
             continue
 
-        print (s)
         visitedStates += [s]
 
-        if (problem.isWumpusClose(s)):
-            stenchClause = Clause(Literal(Labels.WUMPUS_STENCH, s, False))
-            memory[s] |= set([stenchClause])
-            explored |= set([stenchClause])
+        stenchClause = Clause(Literal(Labels.WUMPUS_STENCH, s, not problem.isWumpusClose(s)))
+        memory[s] |= set([stenchClause])
 
-        if (problem.isPoisonCapsuleClose(s)):
-            fumesClause = Clause(Literal(Labels.POISON_FUMES, s, False))
-            memory[s] |= set([fumesClause])
-            explored |= set([fumesClause])
+        fumesClause = Clause(Literal(Labels.POISON_FUMES, s, not problem.isPoisonCapsuleClose(s)))
+        memory[s] |= set([fumesClause])
 
-        if (problem.isTeleporterClose(s)):
-            glowClause = Clause(Literal(Labels.TELEPORTER_GLOW, s, False))
-            memory[s] |= set([glowClause])
-            explored |= set([glowClause])
+        glowClause = Clause(Literal(Labels.TELEPORTER_GLOW, s, not problem.isTeleporterClose(s)))
+        memory[s] |= set([glowClause])
 
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
@@ -224,20 +267,30 @@ def logicBasedSearch(problem):
             for literal in [teleporterLiteral, wumpusLiteral, poisonLiteral, safeLiteral]:
                 clause = Clause(literal)
                 negClause = Clause(literal.negate())
-                print(literal)
 
-                if (resolution(baseKnowledge.copy() | explored.copy(), clause)):
+                relevantKnowledge = environment(bk, memory, allStates, RADIUS, sc)
+                if (literal == safeLiteral):
+                    for clause in relevantKnowledge:
+                        print(clause)
+
+                if (resolution(relevantKnowledge, clause)):
                     memory[sc] |= set([clause])
-                    explored |= set([clause])
 
                     if (not literal.isDeadly()):
-                        nextState += [sc]
+                        nextStates += [sc]
                         break
-                elif (resolution(baseKnowledge.copy() | explored.copy(), negClause)):
-                    explored |= set([negClause])
+                elif (resolution(relevantKnowledge, negClause)):
+                    memory[sc] |= set([negClause])
 
-                if (len(memory[sc]) == 0):
+                if (sc not in nextStates and \
+                        safe(memory[sc])):
                     nextStates += [sc]
+
+        print(s)
+        for clause in memory[s]:
+            print(clause)
+        print
+
 
     return problem.reconstructPath(visitedStates)
 
