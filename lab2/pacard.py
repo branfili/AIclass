@@ -171,10 +171,6 @@ def logicBasedSearch(problem):
                                        Literal(Labels.TELEPORTER, sc, True)]))
                                        for sc in succ])
 
-        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS, cur, True),
-                               Literal(Labels.WUMPUS, st, True)]))
-                               for st in allStates - set([cur])])
-
         bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
                                Literal(Labels.WUMPUS_STENCH, cur, False),
                                Literal(Labels.SAFE, sc, False)]))
@@ -187,9 +183,7 @@ def logicBasedSearch(problem):
         bk[cur] |= set([Clause(set([Literal(label, cur, True),
                                     Literal(Labels.SAFE, cur, True)]))
                                     for label in [Labels.WUMPUS,
-                                                  Labels.POISON,
-                                                  Labels.WUMPUS_STENCH,
-                                                  Labels.POISON_FUMES]])
+                                                  Labels.POISON]])
 
         from game import Directions
         from game import Actions
@@ -217,11 +211,11 @@ def logicBasedSearch(problem):
 
             bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
                                         Literal(Labels.WUMPUS_STENCH, suc3, True),
-                                        Literal(Labels.WUMPUS, cur, True)]))])
+                                        Literal(Labels.WUMPUS, cur, False)]))])
 
             bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
                                         Literal(Labels.TELEPORTER_GLOW, suc3, True),
-                                        Literal(Labels.TELEPORTER, cur, True)]))])
+                                        Literal(Labels.TELEPORTER, cur, False)]))])
 
     # array in order to keep the ordering
     visitedStates = []
@@ -229,6 +223,9 @@ def logicBasedSearch(problem):
 
     nextStates = [startState]
     memory = {s: set() for s in allStates}
+
+    for label in Labels.DEADLY:
+        memory[startState] |= set([Clause(Literal(label, startState, True))])
 
     RADIUS = 2
 
@@ -239,7 +236,7 @@ def logicBasedSearch(problem):
 
         nextStates.remove(s)
 
-        if any(cl.getFirst().isTeleporter() for cl in memory[s]):
+        if problem.isGoalState(s):
             visitedStates += [s]
             break
 
@@ -269,28 +266,28 @@ def logicBasedSearch(problem):
                 negClause = Clause(literal.negate())
 
                 relevantKnowledge = environment(bk, memory, allStates, RADIUS, sc)
-                if (literal == safeLiteral):
-                    for clause in relevantKnowledge:
-                        print(clause)
 
-                if (resolution(relevantKnowledge, clause)):
+                if (resolution(relevantKnowledge, negClause)):
+                    memory[sc] |= set([negClause])
+                    continue
+
+                elif (resolution(relevantKnowledge, clause)):
                     memory[sc] |= set([clause])
 
                     if (not literal.isDeadly()):
                         nextStates += [sc]
                         break
-                elif (resolution(relevantKnowledge, negClause)):
-                    memory[sc] |= set([negClause])
+                    elif (literal == wumpusLiteral):
+                        for st in allStates - set([sc]):
+                            memory[st] |= set([Clause(Literal(Labels.WUMPUS, st, True))])
 
                 if (sc not in nextStates and \
                         safe(memory[sc])):
                     nextStates += [sc]
 
-        print(s)
         for clause in memory[s]:
             print(clause)
         print
-
 
     return problem.reconstructPath(visitedStates)
 
