@@ -201,12 +201,12 @@ def logicBasedSearch(problem):
 
             bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
                                         Literal(Labels.WUMPUS_STENCH, suc2, True),
-                                        Literal(Labels.WUMPUS, cur, True),
+                                        Literal(Labels.WUMPUS, cur, False),
                                         Literal(Labels.WUMPUS, suc21, False)]))])
 
             bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
                                         Literal(Labels.TELEPORTER_GLOW, suc2, True),
-                                        Literal(Labels.TELEPORTER, cur, True),
+                                        Literal(Labels.TELEPORTER, cur, False),
                                         Literal(Labels.TELEPORTER, suc21, False)]))])
 
             bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
@@ -236,7 +236,7 @@ def logicBasedSearch(problem):
 
         nextStates.remove(s)
 
-        if problem.isGoalState(s):
+        if (problem.isGoalState(s)):
             visitedStates += [s]
             break
 
@@ -244,6 +244,7 @@ def logicBasedSearch(problem):
             continue
 
         visitedStates += [s]
+        print (s)
 
         stenchClause = Clause(Literal(Labels.WUMPUS_STENCH, s, not problem.isWumpusClose(s)))
         memory[s] |= set([stenchClause])
@@ -271,7 +272,7 @@ def logicBasedSearch(problem):
                     memory[sc] |= set([negClause])
                     continue
 
-                elif (resolution(relevantKnowledge, clause)):
+                if (resolution(relevantKnowledge, clause)):
                     memory[sc] |= set([clause])
 
                     if (not literal.isDeadly()):
