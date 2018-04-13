@@ -190,31 +190,31 @@ def logicBasedSearch(problem):
 
         for action in [Directions.NORTH, Directions.EAST, Directions.SOUTH, Directions.WEST]:
             x, y = cur
-            dx, dy = Actions.directionToVector(action)
-            dx2, dy2 = Actions.directionToVector(Directions.RIGHT[action])
-            dx3, dy3 = Actions.directionToVector(Directions.REVERSE[action])
+            dxF, dyF = Actions.directionToVector(action)
+            dxR, dyR = Actions.directionToVector(Directions.RIGHT[action])
+            dxA, dyA = Actions.directionToVector(Directions.REVERSE[action])
 
-            suc = int(x + dx), int(y + dy)
-            suc2 = int(x + dx2), int(y + dy2)
-            suc21 = int(x + dx + dx2), int(y + dy + dy2)
-            suc3 = int(x + dx3), int(y + dy3)
+            sucF = int(x + dxF), int(y + dyF)
+            sucR = int(x + dxR), int(y + dyR)
+            sucFR = int(x + dxF + dxR), int(y + dyF + dyR)
+            sucA = int(x + dxA), int(y + dyA)
 
-            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
-                                        Literal(Labels.WUMPUS_STENCH, suc2, True),
-                                        Literal(Labels.WUMPUS, cur, False),
-                                        Literal(Labels.WUMPUS, suc21, False)]))])
-
-            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
-                                        Literal(Labels.TELEPORTER_GLOW, suc2, True),
-                                        Literal(Labels.TELEPORTER, cur, False),
-                                        Literal(Labels.TELEPORTER, suc21, False)]))])
-
-            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, suc, True),
-                                        Literal(Labels.WUMPUS_STENCH, suc3, True),
+            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
+                                        Literal(Labels.WUMPUS_STENCH, sucR, True),
+                                        Literal(Labels.WUMPUS, sucFR, False),
                                         Literal(Labels.WUMPUS, cur, False)]))])
 
-            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, suc, True),
-                                        Literal(Labels.TELEPORTER_GLOW, suc3, True),
+            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
+                                        Literal(Labels.TELEPORTER_GLOW, sucR, True),
+                                        Literal(Labels.TELEPORTER, sucFR, False),
+                                        Literal(Labels.TELEPORTER, cur, False)]))])
+
+            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
+                                        Literal(Labels.WUMPUS_STENCH, sucA, True),
+                                        Literal(Labels.WUMPUS, cur, False)]))])
+
+            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
+                                        Literal(Labels.TELEPORTER_GLOW, sucA, True),
                                         Literal(Labels.TELEPORTER, cur, False)]))])
 
     # array in order to keep the ordering
