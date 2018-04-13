@@ -109,6 +109,45 @@ def outOfBounds(st, width, height):
             st[1] <= 0 or \
             st[1] >= height - 1)
 
+def conclude(st, bk, memory, allStates):
+    RADIUS = 2
+
+    wumpusLiteral = Literal(Labels.WUMPUS, st, False)
+    teleporterLiteral = Literal(Labels.TELEPORTER, st, False)
+    poisonLiteral = Literal(Labels.POISON, st, False)
+    safeLiteral = Literal(Labels.SAFE, st, False)
+
+    literals = [teleporterLiteral, wumpusLiteral, poisonLiteral, safeLiteral]
+
+    for literal in literals:
+        clause = Clause(literal)
+        negClause = Clause(literal.negate())
+
+        if (set([clause, negClause]) & memory[st] != set([])):
+            continue
+
+        relevantKnowledge = environment(bk, memory, allStates, RADIUS, st)
+
+        if (resolution(relevantKnowledge, negClause)):
+            memory[st] |= set([negClause])
+            continue
+
+        if (resolution(relevantKnowledge, clause)):
+            memory[st] |= set([clause])
+
+            for lit in literals:
+                if (literal != lit):
+                    memory[st] |= set([negClause])
+
+            if (not literal.isDeadly()):
+                return memory[st]
+            elif (literal == wumpusLiteral):
+                for st in allStates - set([st]):
+                    memory[st] |= set([Clause(Literal(Labels.WUMPUS, st, True))])
+
+    if (safe(memory[st])):
+        return memory[st]
+
 def logicBasedSearch(problem):
     """
 
@@ -248,8 +287,6 @@ def logicBasedSearch(problem):
     nextStates = [startState]
     memory = {s: set() for s in allStates}
 
-    RADIUS = 2
-
     while len(nextStates) != 0:
         s = chooseNextState(nextStates, memory)
         if (s is None):
@@ -257,14 +294,23 @@ def logicBasedSearch(problem):
 
         nextStates.remove(s)
 
-        if (problem.isGoalState(s)):
-            visitedStates += [s]
-            break
-
         if (s in visitedStates):
             continue
 
+        print (s)
+        print
+
+        if (s != startState):
+            mem = conclude(s, bk, memory, allStates)
+            if (mem is None):
+                continue
+
+            memory[s] = mem
+
         visitedStates += [s]
+
+        if (problem.isGoalState(s)):
+            break
 
         for label in Labels.WTP:
             memory[s] |= set([Clause(Literal(label, s, True))])
@@ -278,7 +324,6 @@ def logicBasedSearch(problem):
         glowClause = Clause(Literal(Labels.TELEPORTER_GLOW, s, not problem.isTeleporterClose(s)))
         memory[s] |= set([glowClause])
 
-        print (s)
         for clause in memory[s]:
             print (clause)
         print
@@ -288,36 +333,13 @@ def logicBasedSearch(problem):
             if (sc in visitedStates):
                 continue
 
-            wumpusLiteral = Literal(Labels.WUMPUS, sc, False)
-            teleporterLiteral = Literal(Labels.TELEPORTER, sc, False)
-            poisonLiteral = Literal(Labels.POISON, sc, False)
-            safeLiteral = Literal(Labels.SAFE, sc, False)
+            mem = conclude(sc, bk, memory, allStates)
+            if (mem is None):
+                continue
 
-            for literal in [teleporterLiteral, wumpusLiteral, poisonLiteral, safeLiteral]:
-                clause = Clause(literal)
-                negClause = Clause(literal.negate())
+            memory[sc] = mem
 
-                if (set([clause, negClause]) & memory[sc] != set([])):
-                    continue
-
-                relevantKnowledge = environment(bk, memory, allStates, RADIUS, sc)
-
-                if (resolution(relevantKnowledge, negClause)):
-                    memory[sc] |= set([negClause])
-                    continue
-
-                if (resolution(relevantKnowledge, clause)):
-                    memory[sc] |= set([clause])
-
-                    if (not literal.isDeadly()):
-                        nextStates += [sc]
-                        break
-                    elif (literal == wumpusLiteral):
-                        for st in allStates - set([sc]):
-                            memory[st] |= set([Clause(Literal(Labels.WUMPUS, st, True))])
-
-            if (sc not in nextStates and \
-                    safe(memory[sc])):
+            if (sc not in nextStates):
                 nextStates += [sc]
 
     return problem.reconstructPath(visitedStates)
