@@ -9,13 +9,14 @@ class Labels:
     TELEPORTER = 't'
     POISON = 'p'
     SAFE = 'o'
+    WALL = 'a'
 
     """
     Some sets for simpler checks
     >>> if literal.label in Labels.DEADLY:
     >>>     # Don't go there!!!
     """
-    DEADLY = set([WUMPUS, POISON])
+    DEADLY = set([WUMPUS, POISON, WALL])
     WTP = set([WUMPUS, POISON, TELEPORTER])
 
     UNIQUE = set([WUMPUS, POISON, TELEPORTER, SAFE])
