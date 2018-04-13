@@ -287,6 +287,10 @@ def resolution(clauses, goal):
 
         clauses, setOfSupport = removeRedundant(clauses, setOfSupport)
 
+        #heuristic
+        if (len(clauses | setOfSupport) > 250):
+            return False
+
 def removeRedundant(clauses, setOfSupport):
     allClauses = clauses | setOfSupport
 

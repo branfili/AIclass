@@ -103,6 +103,12 @@ def safe(knowledge):
 
     return all(not cl.getFirst().isDeadly() for cl in knowledge)
 
+def outOfBounds(st, width, height):
+    return (st[0] <= 0 or \
+            st[0] >= width - 1 or \
+            st[1] <= 0 or \
+            st[1] >= height - 1)
+
 def logicBasedSearch(problem):
     """
 
@@ -149,6 +155,11 @@ def logicBasedSearch(problem):
 
     for cur in allStates:
         succ = map(lambda (s, a, c): s, problem.getSuccessors(cur))
+
+        if (problem.walls[cur[0]][cur[1]]):
+            for label in (Labels.UNIQUE | Labels.INDICATORS):
+                bk[cur] |= set([Clause(Literal(label, cur, False))])
+            continue
 
         bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
                               [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
@@ -197,25 +208,37 @@ def logicBasedSearch(problem):
             sucF = int(x + dxF), int(y + dyF)
             sucR = int(x + dxR), int(y + dyR)
             sucFR = int(x + dxF + dxR), int(y + dyF + dyR)
+
+            if (all(not outOfBounds(p, width, height) for p in [sucF, sucR, sucFR])):
+                bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
+                                            Literal(Labels.WUMPUS_STENCH, sucR, True),
+                                            Literal(Labels.WUMPUS, sucFR, False),
+                                            Literal(Labels.WUMPUS, cur, False)]))])
+
+                bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
+                                            Literal(Labels.TELEPORTER_GLOW, sucR, True),
+                                            Literal(Labels.TELEPORTER, sucFR, False),
+                                            Literal(Labels.TELEPORTER, cur, False)]))])
+
             sucA = int(x + dxA), int(y + dyA)
 
-            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
-                                        Literal(Labels.WUMPUS_STENCH, sucR, True),
-                                        Literal(Labels.WUMPUS, sucFR, False),
-                                        Literal(Labels.WUMPUS, cur, False)]))])
+            if (all(not outOfBounds(p, width, height) for p in [sucF, sucA])):
+                bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
+                                            Literal(Labels.WUMPUS_STENCH, sucA, True),
+                                            Literal(Labels.WUMPUS, cur, False)]))])
 
-            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
-                                        Literal(Labels.TELEPORTER_GLOW, sucR, True),
-                                        Literal(Labels.TELEPORTER, sucFR, False),
-                                        Literal(Labels.TELEPORTER, cur, False)]))])
+                bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
+                                            Literal(Labels.TELEPORTER_GLOW, sucA, True),
+                                            Literal(Labels.TELEPORTER, cur, False)]))])
 
-            bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, sucF, True),
-                                        Literal(Labels.WUMPUS_STENCH, sucA, True),
-                                        Literal(Labels.WUMPUS, cur, False)]))])
+            sucFF = int(x + 2 * dxF), int(y + 2 * dyF)
 
-            bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, sucF, True),
-                                        Literal(Labels.TELEPORTER_GLOW, sucA, True),
-                                        Literal(Labels.TELEPORTER, cur, False)]))])
+            if (all (not outOfBounds(p, width, height) for p in [sucR, sucF, sucFR, sucFF])):
+                bk[cur] |= set([Clause(set([Literal(Labels.POISON, sucR, True),
+                                            Literal(Labels.POISON_FUMES, sucF, True),
+                                            Literal(Labels.POISON_FUMES, sucFR, True),
+                                            Literal(Labels.POISON, sucFF, False),
+                                            Literal(Labels.POISON, cur, False)]))])
 
     # array in order to keep the ordering
     visitedStates = []
@@ -223,9 +246,6 @@ def logicBasedSearch(problem):
 
     nextStates = [startState]
     memory = {s: set() for s in allStates}
-
-    for label in Labels.DEADLY:
-        memory[startState] |= set([Clause(Literal(label, startState, True))])
 
     RADIUS = 2
 
@@ -244,7 +264,9 @@ def logicBasedSearch(problem):
             continue
 
         visitedStates += [s]
-        print (s)
+
+        for label in Labels.WTP:
+            memory[s] |= set([Clause(Literal(label, s, True))])
 
         stenchClause = Clause(Literal(Labels.WUMPUS_STENCH, s, not problem.isWumpusClose(s)))
         memory[s] |= set([stenchClause])
@@ -255,8 +277,16 @@ def logicBasedSearch(problem):
         glowClause = Clause(Literal(Labels.TELEPORTER_GLOW, s, not problem.isTeleporterClose(s)))
         memory[s] |= set([glowClause])
 
+        print (s)
+        for clause in memory[s]:
+            print (clause)
+        print
+
         succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
+            if (sc in visitedStates):
+                continue
+
             wumpusLiteral = Literal(Labels.WUMPUS, sc, False)
             teleporterLiteral = Literal(Labels.TELEPORTER, sc, False)
             poisonLiteral = Literal(Labels.POISON, sc, False)
@@ -285,13 +315,9 @@ def logicBasedSearch(problem):
                         for st in allStates - set([sc]):
                             memory[st] |= set([Clause(Literal(Labels.WUMPUS, st, True))])
 
-                if (sc not in nextStates and \
-                        safe(memory[sc])):
-                    nextStates += [sc]
-
-        for clause in memory[s]:
-            print(clause)
-        print
+            if (sc not in nextStates and \
+                    safe(memory[sc])):
+                nextStates += [sc]
 
     return problem.reconstructPath(visitedStates)
 
