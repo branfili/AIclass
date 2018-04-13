@@ -266,6 +266,9 @@ def logicBasedSearch(problem):
                 clause = Clause(literal)
                 negClause = Clause(literal.negate())
 
+                if (set([clause, negClause]) & memory[sc] != set([])):
+                    continue
+
                 relevantKnowledge = environment(bk, memory, allStates, RADIUS, sc)
 
                 if (resolution(relevantKnowledge, negClause)):
