@@ -112,14 +112,9 @@ def outOfBounds(st, width, height):
 def conclude(st, bk, memory, allStates):
     RADIUS = 2
 
-    wumpusLiteral = Literal(Labels.WUMPUS, st, False)
-    teleporterLiteral = Literal(Labels.TELEPORTER, st, False)
-    poisonLiteral = Literal(Labels.POISON, st, False)
-    safeLiteral = Literal(Labels.SAFE, st, False)
+    for label in Labels.UNIQUE:
+        literal = Literal(label, st, False)
 
-    literals = [teleporterLiteral, wumpusLiteral, poisonLiteral, safeLiteral]
-
-    for literal in literals:
         clause = Clause(literal)
         negClause = Clause(literal.negate())
 
@@ -135,15 +130,16 @@ def conclude(st, bk, memory, allStates):
         if (resolution(relevantKnowledge, clause)):
             memory[st] |= set([clause])
 
-            for lit in literals:
-                if (literal != lit):
-                    memory[st] |= set([negClause])
+            for label2 in Labels.UNIQUE:
+                if (label2 != label):
+                    memory[st] |= set([Clause(Literal(label2, st, True))])
+
+            if (label in [Labels.WUMPUS, Labels.TELEPORTER]):
+                for st in allStates - set([st]):
+                    memory[st] |= set([Clause(Literal(label, st, True))])
 
             if (not literal.isDeadly()):
                 return memory[st]
-            elif (literal == wumpusLiteral):
-                for st in allStates - set([st]):
-                    memory[st] |= set([Clause(Literal(Labels.WUMPUS, st, True))])
 
     if (safe(memory[st])):
         return memory[st]
@@ -203,23 +199,11 @@ def logicBasedSearch(problem):
         bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
                               [Literal(Labels.WUMPUS, sc, False) for sc in succ]))])
 
-        bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, False),
-                               Literal(Labels.WUMPUS, sc, True)]))
-                               for sc in succ])
-
         bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, True)] +
                               [Literal(Labels.POISON, sc, False) for sc in succ]))])
 
-        bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
-                               Literal(Labels.POISON, sc, True)]))
-                               for sc in succ])
-
         bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, True)] +
                               [Literal(Labels.TELEPORTER, sc, False) for sc in succ]))])
-
-        bk[cur] |= set([Clause(set([Literal(Labels.TELEPORTER_GLOW, cur, False),
-                                       Literal(Labels.TELEPORTER, sc, True)]))
-                                       for sc in succ])
 
         bk[cur] |= set([Clause(set([Literal(Labels.POISON_FUMES, cur, False),
                                Literal(Labels.WUMPUS_STENCH, cur, False),
@@ -229,11 +213,6 @@ def logicBasedSearch(problem):
         bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS, cur, False),
                                Literal(Labels.POISON, cur, False),
                                Literal(Labels.SAFE, cur, False)]))])
-
-        bk[cur] |= set([Clause(set([Literal(label, cur, True),
-                                    Literal(Labels.SAFE, cur, True)]))
-                                    for label in [Labels.WUMPUS,
-                                                  Labels.POISON]])
 
         from game import Directions
         from game import Actions
@@ -286,6 +265,10 @@ def logicBasedSearch(problem):
     nextStates = [startState]
     memory = {s: set() for s in allStates}
 
+    sense = {Labels.WUMPUS_STENCH: problem.isWumpusClose,
+             Labels.POISON_FUMES: problem.isPoisonCapsuleClose,
+             Labels.TELEPORTER_GLOW: problem.isTeleporterClose}
+
     while len(nextStates) != 0:
         s = chooseNextState(nextStates, memory)
         if (s is None):
@@ -314,20 +297,22 @@ def logicBasedSearch(problem):
         for label in Labels.WTP:
             memory[s] |= set([Clause(Literal(label, s, True))])
 
-        stenchClause = Clause(Literal(Labels.WUMPUS_STENCH, s, not problem.isWumpusClose(s)))
-        memory[s] |= set([stenchClause])
+        succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
 
-        fumesClause = Clause(Literal(Labels.POISON_FUMES, s, not problem.isPoisonCapsuleClose(s)))
-        memory[s] |= set([fumesClause])
+        for label in Labels.INDICATORS:
+            canSense = sense[label](s)
 
-        glowClause = Clause(Literal(Labels.TELEPORTER_GLOW, s, not problem.isTeleporterClose(s)))
-        memory[s] |= set([glowClause])
+            clause = Clause(Literal(label, s, not canSense))
+            memory[s] |= set([clause])
+
+            if (not canSense):
+                for sc in succ:
+                    memory[sc] |= set([Clause(Literal(Labels.INDICATES[label], s, True))])
 
         for clause in memory[s]:
             print (clause)
         print
 
-        succ = map(lambda (sc, c, a): sc, problem.getSuccessors(s))
         for sc in succ:
             if (sc in visitedStates):
                 continue

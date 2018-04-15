@@ -26,6 +26,9 @@ class Labels:
 
     INDICATORS = set([POISON_FUMES, TELEPORTER_GLOW, WUMPUS_STENCH])
 
+    INDICATES = {WUMPUS_STENCH: WUMPUS,
+                 POISON_FUMES: POISON,
+                 TELEPORTER_GLOW: TELEPORTER}
 
 def stateWeight(state):
     """
@@ -114,6 +117,9 @@ class Literal:
     #my functions
     def getState(self):
         return self.state
+
+    def isNegative(self):
+        return self.negative
 
     def isDeadly(self):
         """
