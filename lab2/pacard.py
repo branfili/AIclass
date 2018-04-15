@@ -64,17 +64,15 @@ def miniWumpusSearch(problem):
 def chooseNextState(nextStates, memory):
     st = filter(lambda s: any(cl.getFirst().isTeleporter() for cl in memory[s]), nextStates)
     if (len(st) != 0):
-        return st[0]
+        return min(st)
 
     st = filter(lambda s: any(cl.getFirst().isSafe() for cl in memory[s]), nextStates)
-    st.sort()
     if (len(st) != 0):
-        return st[0]
+        return min(st)
 
     st = filter(lambda s: safe(memory[s]), nextStates)
-    st.sort()
     if (len(st) != 0):
-        return st[0]
+        return min(st)
 
 def environment(baseKnowledge, exploredKnowledge, allStates, d, cur):
     result = set()
