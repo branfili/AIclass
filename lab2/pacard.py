@@ -67,12 +67,12 @@ def chooseNextState(nextStates, memory):
         return st[0]
 
     st = filter(lambda s: any(cl.getFirst().isSafe() for cl in memory[s]), nextStates)
-    st.sort(lambda x, y: stateWeight(x) < stateWeight(y))
+    st.sort()
     if (len(st) != 0):
         return st[0]
 
     st = filter(lambda s: safe(memory[s]), nextStates)
-    st.sort(lambda x, y : stateWeight(x) < stateWeight(y))
+    st.sort()
     if (len(st) != 0):
         return st[0]
 
