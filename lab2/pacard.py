@@ -196,9 +196,8 @@ def logicBasedSearch(problem):
         succ = map(lambda (s, a, c): s, problem.getSuccessors(cur))
 
         if (problem.walls[cur[0]][cur[1]]):
-            for label in Labels.UNIQUE:
-                bk[cur] |= set([Clause(Literal(label, cur, True))])
-            bk[cur] |= set([Clause(Literal(Labels.WALL, cur, False))])
+            for label in (Labels.UNIQUE | Labels.INDICATORS):
+                bk[cur] |= set([Clause(Literal(label, cur, False))])
             continue
 
         bk[cur] |= set([Clause(set([Literal(Labels.WUMPUS_STENCH, cur, True)] +
