@@ -91,8 +91,8 @@ class ValueIterationAgent(ValueEstimationAgent):
         if (self.mdp.isTerminal(state)):
             return None
 
-        mx = 0
-        ma = 0
+        mx = -1E10
+        ma = None
         for a in self.mdp.getPossibleActions(state):
             q = self.computeQValueFromValues(state, a)
 
