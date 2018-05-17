@@ -8,7 +8,7 @@ class NaiveBayesClassifier(object):
     Note that the variable 'datum' in this code refers to a counter of features
     (not to a raw samples.Datum).
     """
-    def __init__(self, legalLabels, smoothing=0, logTransform=False, featureValues=util.Counter()):
+    def __init__(self, legalLabels, smoothing=0, logTransform=False, featureValues=util.Counter):
         self.legalLabels = legalLabels
         self.type = "naivebayes"
         self.k = int(smoothing) # this is the smoothing parameter, ** use it in your train method **
@@ -28,6 +28,10 @@ class NaiveBayesClassifier(object):
 
         self.features = trainingData[0].keys() # the names of the features in the dataset
 
+        # so len doesn't crash the program
+        if (self.k == 0):
+            self.featureValues = {f: set([]) for f in self.features}
+
         self.prior = util.Counter() # probability over labels
         self.conditionalProb = util.Counter() # Conditional probability of feature feat for a given class having value v
                                       # HINT: could be indexed by (feat, label, value)
@@ -40,7 +44,7 @@ class NaiveBayesClassifier(object):
             for label in self.legalLabels:
                 for value in ['True', 'False']:
                     self.conditionalProb[(feature, label, value)] = float(len(filter(lambda (x, y): x[feature] == value and y == label, zip(trainingData, trainingLabels))) + self.k) / \
-                                                                         (len(filter(lambda y: y == label, trainingLabels)) + self.k * 2)
+                                                                         (len(filter(lambda y: y == label, trainingLabels)) + self.k * len(self.featureValues[feature]))
 
     def predict(self, testData):
         """
