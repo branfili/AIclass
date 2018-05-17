@@ -40,7 +40,7 @@ class NaiveBayesClassifier(object):
             for label in self.legalLabels:
                 for value in ['True', 'False']:
                     self.conditionalProb[(feature, label, value)] = float(len(filter(lambda (x, y): x[feature] == value and y == label, zip(trainingData, trainingLabels))) + self.k) / \
-                                                                         (len(filter(lambda y: y == label, trainingLabels)) + (0 if self.k == 0 else self.k * len(self.featureValues[feature])))
+                                                                         (len(filter(lambda y: y == label, trainingLabels)) + self.k * 2)
 
     def predict(self, testData):
         """
