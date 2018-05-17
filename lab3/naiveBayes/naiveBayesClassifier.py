@@ -37,8 +37,8 @@ class NaiveBayesClassifier(object):
                                       # HINT: could be indexed by (feat, label, value)
 
         for label in self.legalLabels:
-            self.prior[label] = float(len(filter(lambda x: x == label, trainingLabels)) + self.k) / \
-                                     (len(trainingLabels) + self.k * len(self.legalLabels))
+            self.prior[label] = float(len(filter(lambda x: x == label, trainingLabels))) / \
+                                     len(trainingLabels)
 
         for feature in self.features:
             for label in self.legalLabels:

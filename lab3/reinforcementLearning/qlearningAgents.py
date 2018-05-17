@@ -59,6 +59,9 @@ class QLearningAgent(ReinforcementAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
+        if (len(self.getLegalActions(state)) == 0):
+            return 0.0
+
         v = -1E10
         for a in self.getLegalActions(state):
             v = max(v, self.getQValue(state, a))
@@ -71,16 +74,19 @@ class QLearningAgent(ReinforcementAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        v = -1E10
-        ac = 0
+        if (len(self.getLegalActions(state)) == 0):
+            return None
+
+        v = self.computeValueFromQValues(state)
+        actions = []
+
         for a in self.getLegalActions(state):
             q = self.getQValue(state, a)
 
-            if (q > v):
-                v = q
-                ac = a
+            if (q == v):
+                actions.append(a)
 
-        return ac
+        return random.choice(actions)
 
     def getAction(self, state):
         """
@@ -113,9 +119,9 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
-        self.QValues[(state, action)] = (1 - self.alpha) * self.getQValue(state, action) + \
-                                        reward + \
-                                        self.discount * self.computeValueFromQValues(nextState)
+        self.QValues[(state, action)] = self.getQValue(state, action) + \
+                                        self.alpha * \
+                                            (reward + self.discount * self.computeValueFromQValues(nextState) - self.getQValue(state, action))
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -167,6 +173,7 @@ class ApproximateQAgent(PacmanQAgent):
     def __init__(self, extractor='IdentityExtractor', **args):
         self.featExtractor = util.lookup(extractor, globals())()
         PacmanQAgent.__init__(self, **args)
+
         self.weights = util.Counter()
 
     def getWeights(self):
@@ -190,7 +197,6 @@ class ApproximateQAgent(PacmanQAgent):
 
         for i, f in features.iteritems():
             self.weights[i] = self.weights[i] + f * coef
-
 
     def final(self, state):
         "Called at the end of each game."
