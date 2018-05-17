@@ -19,7 +19,7 @@ class NaiveBayesClassifier(object):
         """
         Trains the classifier by collecting counts over the training data, and
         stores the Laplace smoothed estimates so that they can be used to classify.
-        
+
         trainingData is a list of feature dictionaries.  The corresponding
         label lists contain the correct label for each instance.
 
@@ -32,10 +32,15 @@ class NaiveBayesClassifier(object):
         self.conditionalProb = util.Counter() # Conditional probability of feature feat for a given class having value v
                                       # HINT: could be indexed by (feat, label, value)
 
-        # TODO:
-        # construct (and store) the normalized smoothed priors and conditional probabilities
+        for label in self.legalLabels:
+            self.prior[label] = float(len(filter(lambda x: x == label, trainingLabels)) + self.k) / \
+                                     (len(trainingLabels) + self.k * len(self.legalLabels))
 
-        "*** YOUR CODE HERE ***"
+        for feature in self.features:
+            for label in self.legalLabels:
+                for value in ['True', 'False']:
+                    self.conditionalProb[(feature, label, value)] = float(len(filter(lambda (x, y): x[feature] == value and y == label, zip(trainingData, trainingLabels))) + self.k) / \
+                                                                         (len(filter(lambda y: y == label, trainingLabels)) + (0 if self.k == 0 else self.k * len(self.featureValues[feature])))
 
     def predict(self, testData):
         """
@@ -46,7 +51,7 @@ class NaiveBayesClassifier(object):
 
         guesses = []
         self.posteriors = [] # posterior probabilities are stored for later data analysis.
-        
+
         for instance in testData:
             if self.logTransform:
                 posterior = self.calculateLogJointProbabilities(instance)
@@ -70,9 +75,10 @@ class NaiveBayesClassifier(object):
 
         for label in self.legalLabels:
             # calculate the joint probabilities for each class
-            "*** YOUR CODE HERE ***"
+            joint[label] = self.prior[label]
 
-            pass
+            for feature, value in instance.iteritems():
+                joint[label] *= self.conditionalProb[(feature, label, value)]
 
         return joint
 
@@ -90,8 +96,9 @@ class NaiveBayesClassifier(object):
 
         for label in self.legalLabels:
             #calculate the log joint probabilities for each class
-            "*** YOUR CODE HERE ***"
+            logJoint[label] = math.log(self.prior[label])
 
-            pass    
+            for feature, value in instance.iteritems():
+                logJoint[label] += math.log(self.conditionalProb[(feature, label, value)])
 
         return logJoint
