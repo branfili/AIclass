@@ -104,7 +104,10 @@ class QLearningAgent(ReinforcementAgent):
         action = None
 
         if (util.flipCoin(self.epsilon)):
-            action = random.choice(legalActions)
+            if (len(legalActions) == 0):
+                action = None
+            else:
+                action = random.choice(legalActions)
         else:
             action = self.computeActionFromQValues(state)
 
@@ -196,7 +199,7 @@ class ApproximateQAgent(PacmanQAgent):
         features = self.featExtractor.getFeatures(state, action)
 
         for i, f in features.iteritems():
-            self.weights[i] = self.weights[i] + f * coef
+            self.weights[i] = self.weights[i] + coef * f
 
     def final(self, state):
         "Called at the end of each game."

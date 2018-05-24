@@ -12,6 +12,8 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+import random
+
 import mdp, util
 
 from learningAgents import ValueEstimationAgent
@@ -92,15 +94,20 @@ class ValueIterationAgent(ValueEstimationAgent):
             return None
 
         mx = -1E10
-        ma = None
+        actions = []
         for a in self.mdp.getPossibleActions(state):
             q = self.computeQValueFromValues(state, a)
 
-            if (q > mx):
+            if (q == mx):
+                actions.append(a)
+            elif (q > mx):
                 mx = q
-                ma = a
+                actions = [a]
 
-        return ma
+        if (len(actions) == 0):
+            return None
+
+        return random.choice(actions)
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)

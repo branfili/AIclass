@@ -30,7 +30,7 @@ class NaiveBayesClassifier(object):
 
         # so len doesn't crash the program
         if (self.k == 0):
-            self.featureValues = {f: set([]) for f in self.features}
+            self.featureValues = {f: set(['True', 'False']) for f in self.features}
 
         self.prior = util.Counter() # probability over labels
         self.conditionalProb = util.Counter() # Conditional probability of feature feat for a given class having value v
@@ -42,9 +42,9 @@ class NaiveBayesClassifier(object):
 
         for feature in self.features:
             for label in self.legalLabels:
-                for value in ['True', 'False']:
+                for value in self.featureValues[feature]:
                     self.conditionalProb[(feature, label, value)] = float(len(filter(lambda (x, y): x[feature] == value and y == label, zip(trainingData, trainingLabels))) + self.k) / \
-                                                                         (len(filter(lambda y: y == label, trainingLabels)) + self.k * 2)
+                                                                         (len(filter(lambda y: y == label, trainingLabels)) + self.k * len(self.featureValues[feature]))
 
     def predict(self, testData):
         """
@@ -100,9 +100,11 @@ class NaiveBayesClassifier(object):
 
         for label in self.legalLabels:
             #calculate the log joint probabilities for each class
-            logJoint[label] = math.log(self.prior[label])
+            if (self.prior[label] != 0):
+                logJoint[label] = math.log(self.prior[label])
 
             for feature, value in instance.iteritems():
-                logJoint[label] += math.log(self.conditionalProb[(feature, label, value)])
+                if (self.conditionalProb[(feature, label, value)] != 0):
+                    logJoint[label] += math.log(self.conditionalProb[(feature, label, value)])
 
         return logJoint
