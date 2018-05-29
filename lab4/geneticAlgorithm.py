@@ -23,6 +23,8 @@ class GeneticAlgorithm(object):
 		self.keep = elitism  # number of units to keep for elitism
 		self.k = mutationScale # scale of the gaussian noise
 
+                self.fit = lambda x: -x
+
 		self.i = 0 # iteration counter
 
 		# initialize the population randomly from a gaussian distribution
@@ -71,7 +73,7 @@ class GeneticAlgorithm(object):
 
                 bestUnit = self.best()
 
-                return ((1.0 / bestUnit[1]) < self.e or self.i >= self.numIter,
+                return (bestUnit[1] > self.fit(self.e) or self.i >= self.numIter,
                         self.i,
                         bestUnit[0])
 
@@ -82,7 +84,7 @@ class GeneticAlgorithm(object):
 		"""
 		chromosomeError = self.f(chromosome)
 
-                return 1.0 / chromosomeError
+                return self.fit(chromosomeError)
 
 	def bestN(self, n):
 		"""
@@ -99,6 +101,7 @@ class GeneticAlgorithm(object):
 
         def selectParent(self, blacklist = None):
             total = 0.0
+            n = self.populationSize - (0 if blacklist is None else 1)
 
             for unit in self.population:
                 if blacklist is not None and \
@@ -107,7 +110,7 @@ class GeneticAlgorithm(object):
 
                 total += unit[1]
 
-            r = np.random.random() * total
+            r = np.random.random()
             z = 0.0
 
             for unit in self.population:
@@ -115,7 +118,9 @@ class GeneticAlgorithm(object):
                    all(unit[0] == blacklist[0]):
                     continue
 
-                z += unit[1]
+                p = (total - unit[1]) / (total * (n - 1))
+
+                z += p
 
                 if (z >= r):
                     return unit

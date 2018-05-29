@@ -98,7 +98,7 @@ if __name__ == '__main__':
 	#######################################
 
 	elitism = 1 # Keep this many of top units in each iteration
-	populationSize = 30 # The number of chromosomes
+	populationSize = 15 # The number of chromosomes
 	mutationProbability  = .8 # Probability of mutation
 	mutationScale = 10. # Standard deviation of the gaussian noise
 	numIterations = 10000 # Number of iterations to run the genetic algorithm for

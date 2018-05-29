@@ -30,10 +30,12 @@ class NeuralNetwork(object):
 		# vector x.
 
                 y = x
+                print x
 
 	        for layer in self.layers:
                     y = layer.output(y)
 
+                print ""
                 return y
 
 	def outputs(self, X):
@@ -44,9 +46,6 @@ class NeuralNetwork(object):
 
 		# Input: vector X (train / test set)
 		# Output: vector y_pred (predicted output values of the target function)
-		#############################
-		#       YOUR CODE HERE      #
-		#############################
 
 		y_pred = np.array([])
 
