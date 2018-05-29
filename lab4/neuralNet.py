@@ -1,5 +1,5 @@
 from networkLayers import *
-from transferFunctions import * 
+from transferFunctions import *
 
 class NeuralNetwork(object):
 	"""
@@ -18,28 +18,27 @@ class NeuralNetwork(object):
 		"""
 		self.layers.append(layer)
 
-	def output(self, x): 
+	def output(self, x):
 		"""
-			Calculate the output for a single input instance x (one row from 
+			Calculate the output for a single input instance x (one row from
 			the training or test set)
 		"""
 
-		# For each layer - calcuate the output of that layer and use it	
-		# as input to the following layer. The method should return the 
-		# output of the last layer. The input to the first layer is the 
+		# For each layer - calcuate the output of that layer and use it
+		# as input to the following layer. The method should return the
+		# output of the last layer. The input to the first layer is the
 		# vector x.
 
-		###
-		#
-		###
-		#############################
-		#       YOUR CODE HERE      #
-		#############################
-		pass 
+                y = x
+
+	        for layer in self.layers:
+                    y = layer.output(y)
+
+                return y
 
 	def outputs(self, X):
 		"""
-			For a given vector of input instances X (the training or test set), 
+			For a given vector of input instances X (the training or test set),
 			return the vector of outputs for all the input instances.
 		"""
 
@@ -49,7 +48,12 @@ class NeuralNetwork(object):
 		#       YOUR CODE HERE      #
 		#############################
 
-		pass 
+		y_pred = np.array([])
+
+                for x in np.nditer(X):
+                    y_pred = np.append(y_pred, self.output(x))
+
+                return y_pred
 
 	def error(self, prediction, y):
 		"""
@@ -60,13 +64,10 @@ class NeuralNetwork(object):
 		# Return the square error for a single example (the mean square error)
 		# is calculated over all the training instances
 
-		#############################
-		#       YOUR CODE HERE      #
-		#############################
-		pass 
+		return 0.5 * ((prediction - y) ** 2).sum()
 
 
-	def total_error(self, predictions, Y): 
+	def total_error(self, predictions, Y):
 		"""
 			Calculates the total error for ALL the examples in the train/test set.
 		"""
@@ -75,11 +76,15 @@ class NeuralNetwork(object):
 		#        vector of actual values (Y) from the training / test set
 		# Output: The Mean Square Error for all the instances
 
-		# NOTE: The output HAS to be a single floating point value!
-		#############################
-		#       YOUR CODE HERE      #
-		#############################
-		pass 
+                error = 0.0
+
+                for i in range(predictions.size):
+                    y1 = predictions[i]
+                    y2 = Y[i]
+
+                    error += self.error(y1, y2)
+
+                return error
 
 	def forwardStep(self, X, Y):
 		"""
@@ -87,17 +92,14 @@ class NeuralNetwork(object):
 			the error on the given true target function values Y
 		"""
 
-		#############################
-		#       YOUR CODE HERE      #
-		#############################
-		pass
+		return self.total_error(self.outputs(X), Y)
 
 	def size(self):
 		"""
 			Return the total number of weights in the network
 		"""
-		totalSize = 0 
-		for layer in self.layers: 
+		totalSize = 0
+		for layer in self.layers:
 			totalSize += layer.size()
 		return totalSize
 
@@ -106,7 +108,7 @@ class NeuralNetwork(object):
 			Return a 1-d representation of all the weights in the network
 		"""
 		flatWeights = np.array([])
-		for layer in self.layers: 
+		for layer in self.layers:
 			flatWeights = np.append(flatWeights, layer.getWeightsFlat())
 		return flatWeights
 

@@ -2,7 +2,7 @@ import numpy as np
 
 class NetworkLayer(object):
 	"""
-		Base class for representing different possible types of neural network 
+		Base class for representing different possible types of neural network
 		layers.
 		Defines the base methods and documentations of the class and its methods.
 	"""
@@ -11,23 +11,23 @@ class NetworkLayer(object):
 		"""
 			Pass the input values (X) through the layer of the network
 		"""
-		pass 
+		pass
 
 	def size(self):
 		"""
-			Return the number of weights in the layer 
-		""" 
-		return 0  
+			Return the number of weights in the layer
+		"""
+		return 0
 
-	def getWeightsFlat(self): 
+	def getWeightsFlat(self):
 		"""
-			Return the array of weigts in the layer 	
+			Return the array of weigts in the layer
 		"""
-		return np.array([]) 
+		return np.array([])
 
 	def setWeights(self, weights):
 		"""
-			Reset the weight vector/matrix 
+			Reset the weight vector/matrix
 		"""
 
 		pass
@@ -57,11 +57,11 @@ class IdentityLayer(NetworkLayer):
 		return X
 
 
-class LinearLayer(NetworkLayer): 
+class LinearLayer(NetworkLayer):
 	"""
 		A layer that outputs a dot product between the input (X)
-		and the weight (W) vector. 
-	""" 
+		and the weight (W) vector.
+	"""
 	i = 1 # static counter
 
 
@@ -73,19 +73,19 @@ class LinearLayer(NetworkLayer):
 		# static referencing
 		LinearLayer.i+=1
 
-		# Initialize the weights for the neural network 
+		# Initialize the weights for the neural network
 		# from a normal distribution with the given shape, and
 		# set the initial biases to zeros. (What should be the shape
 		# of biases?)
-		#***YOUR CODE HERE***# 
+		#***YOUR CODE HERE***#
 
 		self.weights = np.random.randn(inputShape, outputShape) * 0.1
 		self.biases = np.zeros(outputShape)
 
-	def output(self, X): 	
+	def output(self, X):
 		"""
-			Calculate the dot product of weights and inputs + biases 
-		"""	
+			Calculate the dot product of weights and inputs + biases
+		"""
 		out = X.dot(self.weights) + self.biases
 		return out
 
@@ -97,14 +97,14 @@ class LinearLayer(NetworkLayer):
 
 	def getWeightsFlat(self):
 		"""
-			Returns a one-dimensional representation of the weights in the layer 
+			Returns a one-dimensional representation of the weights in the layer
 		"""
-		return np.append(self.weights.flatten(), self.biases.flatten())		
+		return np.append(self.weights.flatten(), self.biases.flatten())
 
 	def setWeights(self, flat_vector):
 		"""
-			Assumes that the weights will be stored in the same order as the flattened ones 
-		""" 
+			Assumes that the weights will be stored in the same order as the flattened ones
+		"""
 
 		# separated for readability
 		# first split the bias and vector parts
@@ -120,9 +120,9 @@ class LinearLayer(NetworkLayer):
 
 class SigmoidLayer(NetworkLayer):
 	"""
-		A layer that outputs the sigmoid function for each element 
-		in the input (X). 
-	""" 
+		A layer that outputs the sigmoid function for each element
+		in the input (X).
+	"""
 	i = 1 # static counter
 
 	def __init__(self, name='Sigmoid Layer'):
@@ -134,49 +134,51 @@ class SigmoidLayer(NetworkLayer):
 		SigmoidLayer.i+=1
 
 
-	def sigmoid(self, x): 
+	def sigmoid(self, x):
 		return 1. / (1. + np.exp(-x))
 
-	def output(self, X): 
+	def output(self, X):
 		out = self.sigmoid(X)
-		return out 
+		return out
 
 
-class Neuron(NetworkLayer): 
+class Neuron(NetworkLayer):
 	"""
-		A standard neuron first calculates the dot product over the 
-		weights and inputs and then uses the sigmoid function on the output.  
+		A standard neuron first calculates the dot product over the
+		weights and inputs and then uses the sigmoid function on the output.
 	"""
 
-	i = 1 # static counter 
+	i = 1 # static counter
 
-	def __init__(self, w, b, name='Neural Layer'): 
+	def __init__(self, w, b, name='Neural Layer'):
 		self.name = name + " " + str(Neuron.i+1)
 		# static referencing
 		Neuron.i+=1
 
 		self.linear = LinearLayer(w, b)
 		self.sigmoid = SigmoidLayer()
-	
+
 	def setWeights(self, flat_vector):
 		"""
-			Assumes that the weights will be stored in the same order as the flattened ones 
-		""" 
+			Assumes that the weights will be stored in the same order as the flattened ones
+		"""
 
 		self.linear.setWeights(flat_vector)
 
+        def size(self):
+            return self.linear.size()
 
 	def output(self, X):
-		# chaining 
+		# chaining
 		out = self.sigmoid.output(self.linear.output(X))
-		return out 
+		return out
 
 
 class FunctionLayer(NetworkLayer):
 	"""
 		A generalization of the sigmoid layer for any provided transfer
-		function - the outpu of the layer is the function applied to 
-		each element in the input. 
+		function - the outpu of the layer is the function applied to
+		each element in the input.
 	"""
 
 	i = 1 # static counter
@@ -191,11 +193,11 @@ class FunctionLayer(NetworkLayer):
 
 		self.f = f
 
-	def output(self, X): 
+	def output(self, X):
 		"""
-			Appies the given function (Note: the function has to be vectorized for 
+			Appies the given function (Note: the function has to be vectorized for
 			the layer to work in the general case)
 		"""
 		out = self.f(X)
-		return out 
+		return out
 
