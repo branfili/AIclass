@@ -63,12 +63,13 @@ if __name__ == '__main__':
 	#  Define the layers of your
 	#        neural networks
 
-        layout = [input_size, 30, output_size] # Network layout
-        transfer = [sineSigmoid, sineSigmoid]
+        sineTransfer = lambda x: tanh(x) * 1.2
+
+        layout = [input_size, 10, output_size] # Network layout
+        transfer = [sineTransfer, sineTransfer]
 
         for i in range(len(layout) - 1):
-            NN.addLayer(LinearLayer(layout[i], layout[i + 1]))
-            NN.addLayer(FunctionLayer(transfer[i]))
+            NN.addLayer(FunctionNeuron(layout[i], layout[i + 1], transfer[i]))
 
 	def errorClosure(w):
 		"""
@@ -100,8 +101,8 @@ if __name__ == '__main__':
 	#######################################
 
 	elitism = 1 # Keep this many of top units in each iteration
-	populationSize = 30 # The number of chromosomes
-	mutationProbability  = 0.8 # Probability of mutation
+	populationSize = 50 # The number of chromosomes
+	mutationProbability  = 0.9 # Probability of mutation
 	mutationScale = 10.0 # Standard deviation of the gaussian noise
 	numIterations = 10000 # Number of iterations to run the genetic algorithm for
 	errorThreshold = 1e-6 # Lower threshold for the error while optimizing
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
 
 	print_every = 100 # Print the output every this many iterations
-	plot_every = 2000 # Plot the actual vs estimated functions every this many iterations
+	plot_every = 500 # Plot the actual vs estimated functions every this many iterations
 
 	# emulated do-while loop
 	done = False
@@ -129,7 +130,7 @@ if __name__ == '__main__':
 		if iteration % plot_every == 0:
 			NN.setWeights(best)
 			plotter.plot(X_train, y_train, NN.output(X_train))
-			plotter.plot_surface(X_train, y_train, NN)
+                        plotter.plot_surface(X_train, y_train, NN)
 
 	print "Training done, running on test set"
 	NN.setWeights(best)

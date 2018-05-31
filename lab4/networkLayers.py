@@ -168,6 +168,15 @@ class Neuron(NetworkLayer):
 		out = self.sigmoid.output(self.linear.output(X))
 		return out
 
+class FunctionNeuron(Neuron):
+        i = 1
+
+        def __init__(self, w, b, f, name='Functional neural layer'):
+            self.name = name + ' ' + str(Neuron.i+1)
+            Neuron.i += 1
+
+            self.linear = LinearLayer(w, b)
+            self.sigmoid = FunctionLayer(f)
 
 class FunctionLayer(NetworkLayer):
 	"""

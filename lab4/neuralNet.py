@@ -45,10 +45,10 @@ class NeuralNetwork(object):
 		# Input: vector X (train / test set)
 		# Output: vector y_pred (predicted output values of the target function)
 
-		y_pred = np.array([])
+		y_pred = self.output(X[0])
 
-                for x in np.nditer(X):
-                    y_pred = np.append(y_pred, self.output(x))
+                for i in range(1, X.shape[0]):
+                    y_pred = np.vstack([y_pred, self.output(X[i])])
 
                 return y_pred
 
@@ -75,7 +75,7 @@ class NeuralNetwork(object):
 
                 error = 0.0
 
-                for i in range(predictions.size):
+                for i in range(predictions.shape[0]):
                     y1 = predictions[i]
                     y2 = Y[i]
 

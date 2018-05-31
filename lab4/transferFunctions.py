@@ -24,7 +24,3 @@ def tanh(x):
 		Hyperbollic tan transfer function
 	"""
 	return np.tanh(x)
-
-def sineSigmoid(x):
-
-        return 2 * sigmoid(x) - 1
