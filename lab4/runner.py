@@ -63,10 +63,12 @@ if __name__ == '__main__':
 	#  Define the layers of your
 	#        neural networks
 
-        n = 30 # The size of the hidden layer
+        layout = [input_size, 30, output_size] # Network layout
+        transfer = [sineSigmoid, sineSigmoid]
 
-        NN.addLayer(Neuron(input_size, n))
-        NN.addLayer(Neuron(n, output_size))
+        for i in range(len(layout) - 1):
+            NN.addLayer(LinearLayer(layout[i], layout[i + 1]))
+            NN.addLayer(FunctionLayer(transfer[i]))
 
 	def errorClosure(w):
 		"""
@@ -98,9 +100,9 @@ if __name__ == '__main__':
 	#######################################
 
 	elitism = 1 # Keep this many of top units in each iteration
-	populationSize = 15 # The number of chromosomes
-	mutationProbability  = .8 # Probability of mutation
-	mutationScale = 10. # Standard deviation of the gaussian noise
+	populationSize = 30 # The number of chromosomes
+	mutationProbability  = 0.8 # Probability of mutation
+	mutationScale = 10.0 # Standard deviation of the gaussian noise
 	numIterations = 10000 # Number of iterations to run the genetic algorithm for
 	errorThreshold = 1e-6 # Lower threshold for the error while optimizing
 

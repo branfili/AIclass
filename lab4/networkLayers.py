@@ -53,9 +53,6 @@ class IdentityLayer(NetworkLayer):
 		# static referencing
 		IdentityLayer.i+=1
 
-        def size(self):
-            return 1
-
 	def output(self, X):
 		return X
 
@@ -80,7 +77,6 @@ class LinearLayer(NetworkLayer):
 		# from a normal distribution with the given shape, and
 		# set the initial biases to zeros. (What should be the shape
 		# of biases?)
-		#***YOUR CODE HERE***#
 
 		self.weights = np.random.randn(inputShape, outputShape) * 0.1
 		self.biases = np.zeros(outputShape)
@@ -90,7 +86,6 @@ class LinearLayer(NetworkLayer):
 			Calculate the dot product of weights and inputs + biases
 		"""
 		out = X.dot(self.weights) + self.biases
-                print out
 		return out
 
 	def size(self):
@@ -120,8 +115,6 @@ class LinearLayer(NetworkLayer):
 		self.weights = np.reshape(weight_part, self.weights.shape)
 
 
-
-
 class SigmoidLayer(NetworkLayer):
 	"""
 		A layer that outputs the sigmoid function for each element
@@ -137,17 +130,12 @@ class SigmoidLayer(NetworkLayer):
 		# static referencing
 		SigmoidLayer.i+=1
 
-        def size(self):
-            return 1
-
 	def sigmoid(self, x):
-            return 1. / (1. + np.exp(-x))
+            return 1.0 / (1.0 + np.exp(-x))
 
 	def output(self, X):
 		out = self.sigmoid(X)
-                print out
 		return out
-
 
 class Neuron(NetworkLayer):
 	"""
@@ -173,7 +161,7 @@ class Neuron(NetworkLayer):
 		self.linear.setWeights(flat_vector)
 
         def size(self):
-            return self.linear.size() * self.sigmoid.size()
+            return self.linear.size()
 
 	def output(self, X):
 		# chaining
@@ -199,9 +187,6 @@ class FunctionLayer(NetworkLayer):
 		FunctionLayer.i+=1
 
 		self.f = f
-
-        def size(self):
-            return 1
 
 	def output(self, X):
 		"""

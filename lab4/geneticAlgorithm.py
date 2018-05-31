@@ -23,7 +23,7 @@ class GeneticAlgorithm(object):
 		self.keep = elitism  # number of units to keep for elitism
 		self.k = mutationScale # scale of the gaussian noise
 
-                self.fit = lambda x: -x
+                self.fit = lambda x: 1E10 - x
 
 		self.i = 0 # iteration counter
 
@@ -111,19 +111,19 @@ class GeneticAlgorithm(object):
                 total += unit[1]
 
             r = np.random.random()
-            z = 0.0
 
             for unit in self.population:
                 if blacklist is not None and \
                    all(unit[0] == blacklist[0]):
                     continue
 
-                p = (total - unit[1]) / (total * (n - 1))
+                p = unit[1] / total
+                r -= p
 
-                z += p
-
-                if (z >= r):
+                if (r <= 0):
                     return unit
+
+            return self.population[-1]
 
 	def selectParents(self):
 		"""

@@ -58,7 +58,7 @@ def miniWumpusSearch(problem):
     from game import Directions
     e = Directions.EAST
     n = Directions.NORTH
-    return  [e, n, n]
+    return [e, n, n]
 
 #my functions
 def chooseNextState(nextStates, memory):
@@ -160,22 +160,6 @@ def logicBasedSearch(problem):
 
     print "Can I see the glow from the teleporter?",
                \ problem.isTeleporterClose(problem.getStartState())
-
-    (the slash '\\' is used to combine commands spanning through multiple lines -
-    you should remove it if you convert the commands to a single line)
-
-    Feel free to create and use as many helper functions as you want.
-
-    A couple of hints:
-        * Use the getSuccessors method, not only when you are looking for states
-        you can transition into. In case you want to resolve if a poisoned pill is
-        at a certain state, it might be easy to check if you can sense the chemicals
-        on all cells surrounding the state.
-        * Memorize information, often and thoroughly. Dictionaries are your friends and
-        states (tuples) can be used as keys.
-        * Keep track of the states you visit in order. You do NOT need to remember the
-        tranisitions - simply pass the visited states to the 'reconstructPath' method
-        in the search problem. Check logicAgents.py and search.py for implementation.
     """
     width = max(map(lambda (x, y): x, problem.walls.asList()))
     height = max(map(lambda (x, y): y, problem.walls.asList()))

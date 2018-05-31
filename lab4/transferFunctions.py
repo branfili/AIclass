@@ -6,22 +6,25 @@ def sigmoid(x):
 	"""
 	return 1. / (1. + np.exp(-x))
 
-def reLU(x): 
-	""" 
+def reLU(x):
+	"""
 		Rectifier transfer function
-	""" 
+	"""
 	return x * (x > 0)
 
 def leakyReLU(x):
-	""" 
+	"""
 		Leaky rectifier transfer function
 		if x > 0, return x ; else return 0.1 * x
-	""" 
+	"""
 	return x * (x > 0) + (.1 * x) * (x < 0)
 
-def tanh(x): 
-	""" 
+def tanh(x):
+	"""
 		Hyperbollic tan transfer function
-	""" 
+	"""
 	return np.tanh(x)
 
+def sineSigmoid(x):
+
+        return 2 * sigmoid(x) - 1

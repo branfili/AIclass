@@ -30,12 +30,10 @@ class NeuralNetwork(object):
 		# vector x.
 
                 y = x
-                print x
 
-	        for layer in self.layers:
+                for layer in self.layers:
                     y = layer.output(y)
 
-                print ""
                 return y
 
 	def outputs(self, X):
