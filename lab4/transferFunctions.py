@@ -4,7 +4,7 @@ def sigmoid(x):
 	"""
 		Sigmoid transfer function
 	"""
-	return 1. / (1. + np.exp(-x))
+        return 1. / (1. + np.exp(-x))
 
 def reLU(x):
 	"""

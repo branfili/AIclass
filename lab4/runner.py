@@ -37,8 +37,8 @@ if __name__ == '__main__':
 		To change the function being approximated, just change the paths
 		to the dataset in the arguments of the data loader.s
 	"""
-	X_train, y_train = dataLoader.loadFrom(SIN_TRAIN)
-	X_test, y_test = dataLoader.loadFrom(SIN_TEST)
+	X_train, y_train = dataLoader.loadFrom(RASTRIGIN_TRAIN)
+	X_test, y_test = dataLoader.loadFrom(RASTRIGIN_TEST)
 
 	# for check, print out the shapes of the input variables
 	# the first dimension is the number of input samples, the second dimension
@@ -63,13 +63,29 @@ if __name__ == '__main__':
 	#  Define the layers of your
 	#        neural networks
 
-        sineTransfer = lambda x: tanh(x) * 1.2
+        sineTransfer = lambda x: sigmoid(x) * 2.4 - 1.2
 
-        layout = [input_size, 10, output_size] # Network layout
-        transfer = [sineTransfer, sineTransfer]
+        rastriginTransfer = lambda x: sigmoid(x) * 60 - 10
+        rastriginTransfer2 = lambda x: sigmoid(x) * 20 - 10
+
+        rosenbrockTransfer = lambda x: sigmoid(x) * 4500 - 500
+
+        layout = [input_size, 10, 10, output_size] # Network layout
+        transfer = [sigmoid, rastriginTransfer2, rastriginTransfer]
 
         for i in range(len(layout) - 1):
             NN.addLayer(FunctionNeuron(layout[i], layout[i + 1], transfer[i]))
+
+	# Check the constructor (__init__) of the GeneticAlgorithm for further instructions
+	# on what the parameters are. Feel free to change / adapt any parameters. The defaults
+	# are as follows
+
+	elitism = 1 # Keep this many of top units in each iteration
+	populationSize = 35 # The number of chromosomes
+	mutationProbability  = 0.8 # Probability of mutation
+	mutationScale = 100.0 # Standard deviation of the gaussian noise
+	numIterations = 10000 # Number of iterations to run the genetic algorithm for
+	errorThreshold = 1e-6 # Lower threshold for the error while optimizing
 
 	def errorClosure(w):
 		"""
@@ -87,25 +103,9 @@ if __name__ == '__main__':
 		"""
 		# Set the weights to the pre-defined network
                 NN.setWeights(w)
-		# Do a forward pass of the etwork and evaluate the error according to the
+		# Do a forward pass of the network and evaluate the error according to the
 		# oracle (y)
 		return NN.forwardStep(X_train, y_train)
-
-	# Check the constructor (__init__) of the GeneticAlgorithm for further instructions
-	# on what the parameters are. Feel free to change / adapt any parameters. The defaults
-	# are as follows
-
-
-	#######################################
-	#    MODIFY CODE AT WILL FROM HERE    #
-	#######################################
-
-	elitism = 1 # Keep this many of top units in each iteration
-	populationSize = 50 # The number of chromosomes
-	mutationProbability  = 0.9 # Probability of mutation
-	mutationScale = 10.0 # Standard deviation of the gaussian noise
-	numIterations = 10000 # Number of iterations to run the genetic algorithm for
-	errorThreshold = 1e-6 # Lower threshold for the error while optimizing
 
 	GA = GeneticAlgorithm(NN.size(), errorClosure,
 		elitism = elitism,
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
 
 	print_every = 100 # Print the output every this many iterations
-	plot_every = 500 # Plot the actual vs estimated functions every this many iterations
+	plot_every = 100 # Plot the actual vs estimated functions every this many iterations
 
 	# emulated do-while loop
 	done = False
