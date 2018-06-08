@@ -37,8 +37,8 @@ if __name__ == '__main__':
 		To change the function being approximated, just change the paths
 		to the dataset in the arguments of the data loader.s
 	"""
-	X_train, y_train = dataLoader.loadFrom(RASTRIGIN_TRAIN)
-	X_test, y_test = dataLoader.loadFrom(RASTRIGIN_TEST)
+	X_train, y_train = dataLoader.loadFrom(ROSENBROCK_TRAIN)
+	X_test, y_test = dataLoader.loadFrom(ROSENBROCK_TEST)
 
 	# for check, print out the shapes of the input variables
 	# the first dimension is the number of input samples, the second dimension
@@ -65,13 +65,12 @@ if __name__ == '__main__':
 
         sineTransfer = lambda x: sigmoid(x) * 2.4 - 1.2
 
-        rastriginTransfer = lambda x: sigmoid(x) * 60 - 10
-        rastriginTransfer2 = lambda x: sigmoid(x) * 20 - 10
+        rastriginTransfer = lambda x: sigmoid(x) * 5 - 2.5
 
-        rosenbrockTransfer = lambda x: sigmoid(x) * 4500 - 500
+        rosenbrockTransfer = lambda x: sigmoid(x) * 50 - 25
 
-        layout = [input_size, 10, 10, output_size] # Network layout
-        transfer = [sigmoid, rastriginTransfer2, rastriginTransfer]
+        layout = [input_size, 5, 5, output_size] # Network layout
+        transfer = [rosenbrockTransfer, leakyReLU, identity]
 
         for i in range(len(layout) - 1):
             NN.addLayer(FunctionNeuron(layout[i], layout[i + 1], transfer[i]))
@@ -81,9 +80,9 @@ if __name__ == '__main__':
 	# are as follows
 
 	elitism = 1 # Keep this many of top units in each iteration
-	populationSize = 35 # The number of chromosomes
-	mutationProbability  = 0.8 # Probability of mutation
-	mutationScale = 100.0 # Standard deviation of the gaussian noise
+	populationSize = 15 # The number of chromosomes
+	mutationProbability  = 0.05 # Probability of mutation
+	mutationScale = 10.0 # Standard deviation of the gaussian noise
 	numIterations = 10000 # Number of iterations to run the genetic algorithm for
 	errorThreshold = 1e-6 # Lower threshold for the error while optimizing
 
@@ -117,7 +116,7 @@ if __name__ == '__main__':
 
 
 	print_every = 100 # Print the output every this many iterations
-	plot_every = 100 # Plot the actual vs estimated functions every this many iterations
+	plot_every = numIterations # Plot the actual vs estimated functions every this many iterations
 
 	# emulated do-while loop
 	done = False

@@ -24,3 +24,6 @@ def tanh(x):
 		Hyperbollic tan transfer function
 	"""
 	return np.tanh(x)
+
+def identity(x):
+    return x
